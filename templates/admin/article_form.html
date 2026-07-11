@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Edit article' if mode == 'edit' else 'New article' }} — {{ site_name }}{% endblock %}
+{% block body_class %}page-admin{% endblock %}
+
+{% block content %}
+<section class="wrap admin-bar">
+  <div>
+    <h1>{{ 'Edit article' if mode == 'edit' else 'New article' }}</h1>
+  </div>
+  <div class="admin-bar__actions">
+    <a href="{{ url_for('admin_dashboard') }}" class="btn btn--ghost">Back to dashboard</a>
+  </div>
+</section>
+
+<section class="wrap">
+  <form class="article-form" method="POST" enctype="multipart/form-data"
+        action="{{ url_for('admin_edit_article', article_id=article['id']) if mode == 'edit' else url_for('admin_new_article') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    <div class="form-grid">
+      <label class="field field--wide">
+        <span>Title</span>
+        <input type="text" name="title" required value="{{ article['title'] if article else '' }}">
+      </label>
+
+      <label class="field">
+        <span>Section</span>
+        <select name="category_id">
+          <option value="">— None —</option>
+          {% for cat in categories %}
+          <option value="{{ cat['id'] }}" {% if article and article['category_id'] == cat['id'] %}selected{% endif %}>{{ cat['name'] }}</option>
+          {% endfor %}
+        </select>
+      </label>
+
+      <label class="field">
+        <span>Byline</span>
+        <input type="text" name="author" placeholder="Staff Writer" value="{{ article['author'] if article else '' }}">
+      </label>
+
+      <label class="field field--wide">
+        <span>Summary <em>(shown on cards and at the top of the article)</em></span>
+        <textarea name="summary" rows="2">{{ article['summary'] if article else '' }}</textarea>
+      </label>
+
+      <label class="field field--wide">
+        <span>Content <em>(basic HTML tags like &lt;p&gt;, &lt;strong&gt;, &lt;em&gt;, &lt;a href=""&gt;, &lt;h3&gt; are supported)</em></span>
+        <textarea name="content" rows="14" required class="field--mono">{{ article['content'] if article else '' }}</textarea>
+      </label>
+
+      <label class="field">
+        <span>Image {% if mode == 'edit' and article['image_filename'] %}<em>(leave blank to keep current)</em>{% endif %}</span>
+        <input type="file" name="image" accept="image/png,image/jpeg,image/webp,image/gif">
+      </label>
+
+      {% if mode == 'edit' and article['image_filename'] %}
+      <div class="field field--wide current-image">
+        <span>Current image</span>
+        <img src="{{ url_for('static', filename='uploads/' + article['image_filename']) }}" alt="">
+        <label class="checkbox">
+          <input type="checkbox" name="remove_image"> Remove this image
+        </label>
+      </div>
+      {% endif %}
+
+      <label class="field">
+        <span>Status</span>
+        <select name="status">
+          <option value="published" {% if not article or article['status'] == 'published' %}selected{% endif %}>Published</option>
+          <option value="draft" {% if article and article['status'] == 'draft' %}selected{% endif %}>Draft</option>
+        </select>
+      </label>
+
+      <label class="checkbox checkbox--standalone">
+        <input type="checkbox" name="featured" {% if article and article['featured'] %}checked{% endif %}>
+        Feature this article on the front page
+      </label>
+    </div>
+
+    <div class="form-actions">
+      <button type="submit" class="btn btn--primary">{{ 'Save changes' if mode == 'edit' else 'Publish article' }}</button>
+      <a href="{{ url_for('admin_dashboard') }}" class="btn btn--ghost">Cancel</a>
+    </div>
+  </form>
+</section>
+{% endblock %}

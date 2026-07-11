@@ -1,0 +1,19 @@
+# Database (each environment generates its own on first run)
+negarit.db
+
+# Uploaded images (user content, not source)
+static/uploads/*
+!static/uploads/.gitkeep
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+env/
+
+# OS
+.DS_Store
+
+# Env vars
+.env

@@ -1,0 +1,16 @@
+{% macro pulse() -%}
+<svg class="pulse" viewBox="0 0 24 24" width="13" height="13" aria-hidden="true" focusable="false">
+  <circle cx="5" cy="19" r="1.6" fill="currentColor"/>
+  <path d="M9 19a7 7 0 0 0-7-7" stroke="currentColor" stroke-width="1.7" fill="none" stroke-linecap="round"/>
+  <path d="M13.2 19a11.2 11.2 0 0 0-11.2-11.2" stroke="currentColor" stroke-width="1.7" fill="none" stroke-linecap="round" opacity="0.55"/>
+  <path d="M17.4 19a15.4 15.4 0 0 0-15.4-15.4" stroke="currentColor" stroke-width="1.7" fill="none" stroke-linecap="round" opacity="0.3"/>
+</svg>
+{%- endmacro %}
+
+{% macro eyebrow(text, href=None) -%}
+{% if href %}
+<a href="{{ href }}" class="eyebrow eyebrow--link">{{ pulse() }}<span>{{ text }}</span></a>
+{% else %}
+<span class="eyebrow">{{ pulse() }}<span>{{ text }}</span></span>
+{% endif %}
+{%- endmacro %}

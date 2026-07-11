@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% from "_macros.html" import pulse, eyebrow %}
+
+{% block title %}{{ category['name'] }} — {{ site_name }}{% endblock %}
+
+{% block content %}
+<section class="wrap category-header">
+  {{ eyebrow('Section') }}
+  <h1>{{ category['name'] }}</h1>
+</section>
+
+<section class="wrap latest">
+  {% if articles %}
+  <div class="card-grid">
+    {% for art in articles %}
+    <article class="card">
+      {% if art['image_filename'] %}
+      <a href="{{ url_for('article', slug=art['slug']) }}" class="card__image">
+        <img src="{{ url_for('static', filename='uploads/' + art['image_filename']) }}" alt="{{ art['title'] }}" loading="lazy">
+      </a>
+      {% endif %}
+      <div class="card__body">
+        {{ eyebrow(art['category_name'] or 'News') }}
+        <h3 class="card__title"><a href="{{ url_for('article', slug=art['slug']) }}">{{ art['title'] }}</a></h3>
+        <p class="card__summary">{{ art['summary'] }}</p>
+        <div class="byline byline--small">
+          <span>{{ art['author'] }}</span>
+          <span class="byline__dot">&middot;</span>
+          <span>{{ art['created_at']|format_date }}</span>
+        </div>
+      </div>
+    </article>
+    {% endfor %}
+  </div>
+
+  {% if has_prev or has_next %}
+  <nav class="pagination">
+    {% if has_prev %}
+    <a href="{{ url_for('category', slug=category['slug'], page=page-1) }}" class="pagination__link">&larr; Newer</a>
+    {% endif %}
+    {% if has_next %}
+    <a href="{{ url_for('category', slug=category['slug'], page=page+1) }}" class="pagination__link pagination__link--next">Older &rarr;</a>
+    {% endif %}
+  </nav>
+  {% endif %}
+
+  {% else %}
+  <div class="empty-state">
+    <h2>No stories in this section yet</h2>
+    <p>Check back soon, or browse other sections from the menu above.</p>
+  </div>
+  {% endif %}
+</section>
+{% endblock %}

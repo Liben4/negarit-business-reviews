@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}Page not found — {{ site_name }}{% endblock %}
+
+{% block content %}
+<section class="wrap empty-state empty-state--404">
+  <span class="empty-state__code">404</span>
+  <h1>This page doesn't exist</h1>
+  <p>{{ message or "The story or page you're looking for may have been moved or removed." }}</p>
+  <a href="{{ url_for('index') }}" class="btn btn--primary">Back to the front page</a>
+</section>
+{% endblock %}

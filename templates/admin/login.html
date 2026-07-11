@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Admin Login — {{ site_name }}{% endblock %}
+{% block body_class %}page-admin{% endblock %}
+
+{% block content %}
+<section class="wrap auth-wrap">
+  <form class="auth-card" method="POST" action="{{ url_for('admin_login') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <h1>Admin Login</h1>
+    <p class="auth-card__hint">Sign in to publish and manage articles.</p>
+
+    <label class="field">
+      <span>Username</span>
+      <input type="text" name="username" autocomplete="username" required autofocus>
+    </label>
+
+    <label class="field">
+      <span>Password</span>
+      <input type="password" name="password" autocomplete="current-password" required>
+    </label>
+
+    <button type="submit" class="btn btn--primary btn--block">Log in</button>
+  </form>
+</section>
+{% endblock %}

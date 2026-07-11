@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}About — {{ site_name }}{% endblock %}
+
+{% block content %}
+<section class="wrap static-page">
+  <h1>About {{ site_name }}</h1>
+  <p class="lede">Negarit takes its name from the herald's drum once sounded to announce proclamations
+  to the public &mdash; a fitting namesake for a newsroom built to bring business news to readers first.</p>
+
+  <p>{{ site_name }} covers markets, the economy, companies, technology, and policy, with a focus on the
+  stories that shape how business gets done. Edit this page from <code>templates/about.html</code> to add
+  your own newsroom's story, mission, and team.</p>
+
+  <h2>What we cover</h2>
+  <ul class="static-list">
+    <li>Markets &mdash; trading activity, commodities, and investor sentiment</li>
+    <li>Economy &mdash; policy, inflation, and macro trends</li>
+    <li>Companies &mdash; corporate news across industries</li>
+    <li>Technology &mdash; the tools and startups changing how business works</li>
+    <li>Policy &mdash; regulation and government decisions that affect business</li>
+  </ul>
+</section>
+{% endblock %}

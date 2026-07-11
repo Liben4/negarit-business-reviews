@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% from "_macros.html" import pulse, eyebrow %}
+
+{% block title %}{{ article['title'] }} — {{ site_name }}{% endblock %}
+
+{% block content %}
+<article class="wrap article">
+  {% if article['status'] == 'draft' %}
+  <div class="draft-banner">Draft preview &mdash; only visible to you while logged in as admin.</div>
+  {% endif %}
+
+  {{ eyebrow(article['category_name'] or 'News', url_for('category', slug=article['category_slug']) if article['category_slug'] else None) }}
+  <h1 class="article__headline">{{ article['title'] }}</h1>
+  <p class="article__summary">{{ article['summary'] }}</p>
+  <div class="byline">
+    <span>{{ article['author'] }}</span>
+    <span class="byline__dot">&middot;</span>
+    <span>{{ article['created_at']|format_date }}</span>
+  </div>
+
+  {% if article['image_filename'] %}
+  <div class="article__image">
+    <img src="{{ url_for('static', filename='uploads/' + article['image_filename']) }}" alt="{{ article['title'] }}">
+  </div>
+  {% endif %}
+
+  <div class="article__body">
+    {{ article['content']|safe }}
+  </div>
+</article>
+
+{% if related %}
+<section class="wrap latest">
+  <div class="section-heading">
+    <h2>More from {{ article['category_name'] }}</h2>
+  </div>
+  <div class="card-grid">
+    {% for art in related %}
+    <article class="card">
+      {% if art['image_filename'] %}
+      <a href="{{ url_for('article', slug=art['slug']) }}" class="card__image">
+        <img src="{{ url_for('static', filename='uploads/' + art['image_filename']) }}" alt="{{ art['title'] }}" loading="lazy">
+      </a>
+      {% endif %}
+      <div class="card__body">
+        <h3 class="card__title"><a href="{{ url_for('article', slug=art['slug']) }}">{{ art['title'] }}</a></h3>
+        <p class="card__summary">{{ art['summary'] }}</p>
+        <div class="byline byline--small">
+          <span>{{ art['created_at']|format_date }}</span>
+        </div>
+      </div>
+    </article>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+{% endblock %}

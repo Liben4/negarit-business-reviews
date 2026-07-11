@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}{{ site_name }}{% endblock %}</title>
+<meta name="description" content="Business news, markets, and policy coverage from {{ site_name }}.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="{% block body_class %}{% endblock %}">
+
+<header class="masthead">
+  <div class="wrap masthead__inner">
+    <a href="{{ url_for('index') }}" class="masthead__brand">
+      <span class="masthead__title">NEGARIT</span>
+      <span class="masthead__subtitle">BUSINESS&nbsp;NEWS</span>
+    </a>
+    <div class="masthead__meta">
+      <span class="masthead__date">{{ current_year }}</span>
+    </div>
+  </div>
+  <div class="masthead__rule"></div>
+  <nav class="topnav">
+    <div class="wrap topnav__inner">
+      <div class="topnav__links">
+        {% for cat in nav_categories %}
+        <a href="{{ url_for('category', slug=cat['slug']) }}" class="topnav__link">{{ cat['name'] }}</a>
+        {% endfor %}
+      </div>
+      <div class="topnav__links topnav__links--secondary">
+        <a href="{{ url_for('about') }}" class="topnav__link">About</a>
+        <a href="{{ url_for('contact') }}" class="topnav__link">Contact</a>
+      </div>
+    </div>
+  </nav>
+</header>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+  <div class="wrap flash-stack">
+    {% for category, message in messages %}
+    <div class="flash flash--{{ category }}">{{ message }}</div>
+    {% endfor %}
+  </div>
+  {% endif %}
+{% endwith %}
+
+<main>
+{% block content %}{% endblock %}
+</main>
+
+<footer class="site-footer">
+  <div class="wrap site-footer__inner">
+    <div class="site-footer__brand">
+      <span class="masthead__title masthead__title--footer">NEGARIT</span>
+      <p>Business news, markets, and policy coverage.</p>
+    </div>
+    <div class="site-footer__links">
+      <a href="{{ url_for('index') }}">Home</a>
+      <a href="{{ url_for('about') }}">About</a>
+      <a href="{{ url_for('contact') }}">Contact</a>
+      {% if is_admin %}
+        <a href="{{ url_for('admin_dashboard') }}">Dashboard</a>
+      {% else %}
+        <a href="{{ url_for('admin_login') }}">Admin</a>
+      {% endif %}
+    </div>
+  </div>
+  <div class="wrap site-footer__bottom">
+    <span>&copy; {{ current_year }} {{ site_name }}. All rights reserved.</span>
+  </div>
+</footer>
+
+</body>
+</html>

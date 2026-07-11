@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% from "_macros.html" import pulse, eyebrow %}
+
+{% block content %}
+
+{% if featured %}
+<section class="wrap hero">
+  <div class="hero__text">
+    {{ eyebrow(featured['category_name'] or 'News', url_for('category', slug=featured['category_slug']) if featured['category_slug'] else None) }}
+    <h1 class="hero__headline"><a href="{{ url_for('article', slug=featured['slug']) }}">{{ featured['title'] }}</a></h1>
+    <p class="hero__summary">{{ featured['summary'] }}</p>
+    <div class="byline">
+      <span>{{ featured['author'] }}</span>
+      <span class="byline__dot">&middot;</span>
+      <span>{{ featured['created_at']|format_date }}</span>
+    </div>
+  </div>
+  {% if featured['image_filename'] %}
+  <a href="{{ url_for('article', slug=featured['slug']) }}" class="hero__image">
+    <img src="{{ url_for('static', filename='uploads/' + featured['image_filename']) }}" alt="{{ featured['title'] }}">
+  </a>
+  {% endif %}
+</section>
+{% else %}
+<section class="wrap empty-state">
+  <h1>No stories yet</h1>
+  <p>Once you publish an article from the admin dashboard, it will appear here.</p>
+</section>
+{% endif %}
+
+{% if latest %}
+<section class="wrap latest">
+  <div class="section-heading">
+    <h2>Latest</h2>
+  </div>
+  <div class="card-grid">
+    {% for art in latest %}
+    <article class="card">
+      {% if art['image_filename'] %}
+      <a href="{{ url_for('article', slug=art['slug']) }}" class="card__image">
+        <img src="{{ url_for('static', filename='uploads/' + art['image_filename']) }}" alt="{{ art['title'] }}" loading="lazy">
+      </a>
+      {% endif %}
+      <div class="card__body">
+        {{ eyebrow(art['category_name'] or 'News', url_for('category', slug=art['category_slug']) if art['category_slug'] else None) }}
+        <h3 class="card__title"><a href="{{ url_for('article', slug=art['slug']) }}">{{ art['title'] }}</a></h3>
+        <p class="card__summary">{{ art['summary'] }}</p>
+        <div class="byline byline--small">
+          <span>{{ art['author'] }}</span>
+          <span class="byline__dot">&middot;</span>
+          <span>{{ art['created_at']|format_date }}</span>
+        </div>
+      </div>
+    </article>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+{% endblock %}

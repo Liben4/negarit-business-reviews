@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — {{ site_name }}{% endblock %}
+{% block body_class %}page-admin{% endblock %}
+
+{% block content %}
+<section class="wrap admin-bar">
+  <div>
+    <h1>Dashboard</h1>
+    <p class="admin-bar__hint">Signed in as {{ session.get('admin_username') }}</p>
+  </div>
+  <div class="admin-bar__actions">
+    <a href="{{ url_for('admin_change_password') }}" class="btn btn--ghost">Change password</a>
+    <a href="{{ url_for('admin_new_article') }}" class="btn btn--primary">New article</a>
+    <a href="{{ url_for('admin_logout') }}" class="btn btn--ghost">Log out</a>
+  </div>
+</section>
+
+<section class="wrap stats-strip">
+  <div class="stat"><span class="stat__value">{{ stats.total }}</span><span class="stat__label">Total</span></div>
+  <div class="stat"><span class="stat__value">{{ stats.published }}</span><span class="stat__label">Published</span></div>
+  <div class="stat"><span class="stat__value">{{ stats.drafts }}</span><span class="stat__label">Drafts</span></div>
+  <div class="stat"><span class="stat__value">{{ stats.categories }}</span><span class="stat__label">Sections</span></div>
+</section>
+
+<section class="wrap">
+  {% if articles %}
+  <div class="table-wrap">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>Title</th>
+          <th>Section</th>
+          <th>Status</th>
+          <th>Updated</th>
+          <th class="admin-table__actions-col">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for art in articles %}
+        <tr>
+          <td class="admin-table__title">
+            {{ art['title'] }}
+            {% if art['featured'] %}<span class="tag tag--featured">Featured</span>{% endif %}
+          </td>
+          <td>{{ art['category_name'] or '—' }}</td>
+          <td><span class="tag tag--{{ art['status'] }}">{{ art['status']|capitalize }}</span></td>
+          <td>{{ art['updated_at']|format_date }}</td>
+          <td class="admin-table__actions">
+            <a href="{{ url_for('article', slug=art['slug']) }}" class="btn btn--small btn--ghost">View</a>
+            <a href="{{ url_for('admin_edit_article', article_id=art['id']) }}" class="btn btn--small btn--ghost">Edit</a>
+            <form method="POST" action="{{ url_for('admin_delete_article', article_id=art['id']) }}"
+                  onsubmit="return confirm('Delete this article? This cannot be undone.');">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="btn btn--small btn--danger">Delete</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <h2>No articles yet</h2>
+    <p>Create your first article to see it here and on the front page.</p>
+    <a href="{{ url_for('admin_new_article') }}" class="btn btn--primary">New article</a>
+  </div>
+  {% endif %}
+</section>
+{% endblock %}
