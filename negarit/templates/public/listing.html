@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% from "public/_macros.html" import story, crumbs, pager, img, sponsored %}
+{% set cat_meta = category if kind == 'category' else None %}
+{% block title %}{% if cat_meta and cat_meta.seo_title %}{{ cat_meta.seo_title }}{% else %}{{ heading }}{% endif %}{% if pagination.page > 1 %} – Page {{ pagination.page }}{% endif %} | {{ SITE_NAME }}{% endblock %}
+{% block description %}{% if cat_meta and cat_meta.meta_description %}{{ cat_meta.meta_description }}{% elif intro %}{{ intro|truncate(155) }}{% else %}Latest {{ heading }} stories from {{ SITE_NAME }}.{% endif %}{% endblock %}
+{% block robots %}<meta name="robots" content="{{ 'noindex, follow' if pagination.page > 3 else 'index, follow, max-image-preview:large' }}">{% endblock %}
+{% block head %}
+{% if pagination.has_prev %}<link rel="prev" href="{{ base_path }}{% if pagination.prev_num > 1 %}?page={{ pagination.prev_num }}{% endif %}">{% endif %}
+{% if pagination.has_next %}<link rel="next" href="{{ base_path }}?page={{ pagination.next_num }}">{% endif %}
+{% if kind == 'author' %}<script type="application/ld+json">{{ {"@context":"https://schema.org","@type":"Person","name":author.name,"jobTitle":author.position,"description":author.bio,"url":canonical,"sameAs":author.socials|map(attribute=1)|list}|tojson }}</script>{% endif %}
+{% endblock %}
+{% block content %}
+{{ crumbs(breadcrumbs) }}
+{% if kind == 'author' %}
+<header class="author-head">
+  {% if author.image %}{{ img(author.image, "120px", True, "", "avatar xl") }}{% endif %}
+  <div><p class="eyebrow">Author</p><h1 class="page-title">{{ author.name }}</h1>
+    {% if author.position %}<p class="role">{{ author.position }}</p>{% endif %}
+    {% if author.bio %}<p class="bio">{{ author.bio }}</p>{% endif %}
+    {% if author.socials %}<p class="socials">{% for label, u in author.socials %}<a href="{{ u }}" rel="noopener me" target="_blank">{{ label }}</a>{% endfor %}</p>{% endif %}</div>
+</header>
+{% else %}
+<header class="page-head"><p class="eyebrow">{{ {'category':'Section','tag':'Topic','type':'Section'}.get(kind,'') }}</p><h1 class="page-title">{{ heading }}</h1>{% if intro and kind != 'tag' %}<p class="page-intro">{{ intro }}</p>{% elif kind == 'tag' %}<p class="page-intro">{{ intro }}</p>{% endif %}</header>
+{% endif %}
+{% if subcategories %}<nav class="subcats" aria-label="Subcategories">{% for sc in subcategories %}<a href="/{{ sc.slug }}">{{ sc.name }}</a>{% endfor %}</nav>{% endif %}
+{% if kind == 'type' and heading == 'Sponsored Content' %}<p class="content-note" role="note"><strong>Sponsored content</strong> is paid for by advertisers, labelled on every article, and produced separately from our newsroom.</p>{% endif %}
+{% if pagination.items %}
+<div class="listing">
+  <div class="listing-main">
+    {% if pagination.page == 1 %}{{ story(pagination.items[0], "lead", "(min-width:1100px) 700px, 100vw", True) }}{% set rest = pagination.items[1:] %}{% else %}{% set rest = pagination.items %}{% endif %}
+    <div class="stack">{% for a in rest %}{{ story(a, "row") }}{% endfor %}</div>
+    {{ pager(pagination, base_path) }}
+  </div>
+  <aside class="rail">{% for ad in ad('sidebar') %}{% include "public/_ad.html" %}{% endfor %}{{ sponsored() }}</aside>
+</div>
+{% else %}
+<p class="empty-state">No stories here yet. <a href="/">Back to the homepage</a>.</p>
+{% endif %}
+{% endblock %}

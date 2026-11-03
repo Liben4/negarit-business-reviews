@@ -1,0 +1,11 @@
+{% extends "admin/base.html" %}
+{% from "admin/_macros.html" import csrf, field %}
+{% block title %}Site settings{% endblock %}
+{% block content %}
+<div class="page-head"><h1>Site settings</h1></div>
+<form method="post" novalidate>{{ csrf() }}
+  <nav class="tabs" aria-label="Settings sections">{% for g, _ in groups %}<a href="#{{ g }}">{{ g }}</a>{% endfor %}</nav>
+  {% for g, fields in groups %}<fieldset class="panel" id="{{ g }}"><legend>{{ g }}</legend><div class="formgrid">{% for fld in fields %}{{ field(fld) }}{% endfor %}</div></fieldset>{% endfor %}
+  <p><button class="btn" type="submit">Save settings</button></p>
+</form>
+{% endblock %}

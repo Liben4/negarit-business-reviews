@@ -1,0 +1,6 @@
+{% if ad.media %}
+<aside class="ad ad-{{ ad.placement }}" aria-label="Advertisement" data-ad="{{ ad.id }}">
+  <span class="ad-label">Advertisement</span>
+  <a href="/ad/{{ ad.id }}" rel="sponsored noopener" target="_blank"><img src="{{ ad.media.url }}" alt="{{ ad.title }}" {% if ad.media.width %}width="{{ ad.media.width }}" height="{{ ad.media.height }}"{% endif %} loading="lazy" decoding="async"></a>
+</aside>
+{% endif %}

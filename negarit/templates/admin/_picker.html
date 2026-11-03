@@ -1,0 +1,10 @@
+<dialog id="picker" aria-labelledby="picker-h">
+  <div class="picker-head"><h2 id="picker-h">Choose an image</h2><button type="button" class="btn small secondary" data-close>Close</button></div>
+  <div class="picker-tools">
+    <input type="search" id="picker-q" placeholder="Search library" aria-label="Search library">
+    {% if can('media.upload') %}<label class="btn small">Upload<input type="file" id="picker-upload" accept="image/jpeg,image/png,image/webp,image/gif" hidden></label>{% endif %}
+    <span class="muted" id="picker-msg" role="status"></span>
+  </div>
+  <div class="picker-grid" id="picker-grid"></div>
+  <p class="center"><button type="button" class="btn small secondary" id="picker-more" hidden>Load more</button></p>
+</dialog>

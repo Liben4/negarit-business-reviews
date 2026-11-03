@@ -1,0 +1,21 @@
+{% extends "admin/base.html" %}
+{% from "admin/_macros.html" import csrf, field %}
+{% block title %}SEO{% endblock %}
+{% block content %}
+<div class="page-head"><h1>SEO</h1></div>
+<div class="grid2">
+<form method="post" class="panel" novalidate>{{ csrf() }}<h2>Site-wide defaults</h2><div class="formgrid">{% for fld in fields %}{{ field(fld) }}{% endfor %}</div><p><button class="btn" type="submit">Save</button></p></form>
+<section class="panel"><h2>Technical SEO</h2>
+  <ul class="checks">
+    <li><a href="/sitemap.xml" target="_blank" rel="noopener">{{ site }}/sitemap.xml</a> <span class="muted">— pages, categories, authors, tags, articles (+ images)</span></li>
+    <li><a href="/news-sitemap.xml" target="_blank" rel="noopener">{{ site }}/news-sitemap.xml</a> <span class="muted">— last 48h for Google News</span></li>
+    <li><a href="/rss.xml" target="_blank" rel="noopener">{{ site }}/rss.xml</a></li>
+    <li><a href="/robots.txt" target="_blank" rel="noopener">{{ site }}/robots.txt</a></li>
+  </ul>
+  <p class="help">Submit the sitemap in Google Search Console and paste your verification code on the left. Demo/sample content is excluded from sitemaps and feeds.</p>
+</section></div>
+<section class="panel"><h2>Content audit</h2>
+{% for label, items in audit.items() %}<h3>{{ label }} <span class="muted">({{ items|length }}{{ '+' if items|length >= 25 }})</span></h3>
+  {% if items %}<ul class="plain">{% for a in items %}<li><a href="{{ url_for('admin.article_edit', id=a.id) }}">{{ a.title }}</a></li>{% endfor %}</ul>{% else %}<p class="muted">All good.</p>{% endif %}{% endfor %}
+</section>
+{% endblock %}

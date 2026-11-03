@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% from "public/_macros.html" import crumbs, img %}
+{% block title %}Authors | {{ SITE_NAME }}{% endblock %}
+{% block description %}The journalists, analysts and contributors of {{ SITE_NAME }}.{% endblock %}
+{% block content %}
+{{ crumbs(breadcrumbs) }}
+<header class="page-head"><p class="eyebrow">Our people</p><h1 class="page-title">Authors</h1></header>
+<div class="grid grid-3 authors">
+  {% for au, n in rows %}
+  <article class="author-card">{% if au.image %}{{ img(au.image, "96px", False, "", "avatar lg") }}{% else %}<span class="avatar lg ph"><span>{{ au.name[:1] }}</span></span>{% endif %}
+    <div><h2 class="hl sm"><a href="/author/{{ au.slug }}">{{ au.name }}</a></h2>{% if au.position %}<p class="muted small">{{ au.position }}</p>{% endif %}<p class="small">{{ n }} article{{ '' if n == 1 else 's' }}</p></div></article>
+  {% else %}<p class="empty-state">No authors yet.</p>{% endfor %}
+</div>
+{% endblock %}

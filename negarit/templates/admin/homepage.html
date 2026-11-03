@@ -1,0 +1,45 @@
+{% extends "admin/base.html" %}
+{% from "admin/_macros.html" import csrf %}
+{% block title %}Homepage{% endblock %}
+{% block content %}
+<div class="page-head"><h1>Homepage</h1><a class="btn secondary" href="/" target="_blank" rel="noopener">View homepage ↗</a></div>
+<p class="help note">Control the front page: the lead story, editor's picks, the breaking banner, and which sections appear, in what order and how many stories each shows. Only published stories can be selected. Empty sections are never shown.</p>
+<form method="post" novalidate>{{ csrf() }}
+<div class="grid2">
+<section class="panel"><h2>Lead story</h2>
+  <label class="sr" for="lead_id">Lead story</label>
+  <select id="lead_id" name="lead_id"><option value="">Automatic: newest featured story</option>{% for id, label in options %}<option value="{{ id }}" {{ 'selected' if id == lead_id }}>{{ label }}</option>{% endfor %}</select>
+  <p class="help">Tip: mark stories <em>Featured</em> in the editor to also list them under “Top stories”.</p>
+  <h2 class="mt">Editor's picks</h2>
+  {% for p in picks %}<label class="sr" for="pick_{{ loop.index0 }}">Pick {{ loop.index }}</label>
+  <select id="pick_{{ loop.index0 }}" name="pick_{{ loop.index0 }}" class="mb"><option value="">— pick {{ loop.index }} (empty) —</option>{% for id, label in options %}<option value="{{ id }}" {{ 'selected' if id == p }}>{{ label }}</option>{% endfor %}</select>{% endfor %}
+</section>
+<section class="panel"><h2>Breaking-news banner</h2>
+  <label class="check"><input type="checkbox" name="breaking_enabled" {{ 'checked' if S.breaking_enabled == '1' }}> Show the banner when breaking stories exist</label>
+  <div class="fld"><label for="breaking_label">Label</label><input id="breaking_label" name="breaking_label" value="{{ S.breaking_label }}" maxlength="40"></div>
+  <div class="fld"><label for="breaking_hours">Show stories for (hours)</label><input id="breaking_hours" name="breaking_hours" value="{{ S.breaking_hours }}" maxlength="3"></div>
+  <p class="help">Flag a story <em>Breaking news</em> in the article editor. Currently showing:</p>
+  {% if breaking %}<ul class="plain">{% for a in breaking %}<li><a href="{{ url_for('admin.article_edit', id=a.id) }}">{{ a.title }}</a></li>{% endfor %}</ul>{% else %}<p class="muted small">No breaking stories in the last 24 hours.</p>{% endif %}
+</section></div>
+<section class="panel"><h2>Sections</h2>
+<div class="table-wrap"><table><thead><tr><th scope="col">Order</th><th scope="col">Section</th><th scope="col">Heading override</th><th scope="col">Stories</th><th scope="col">Visible</th><th scope="col">Remove</th></tr></thead><tbody>
+{% for sec in sections %}<tr>
+  <td><label class="sr" for="sec_{{ sec.id }}_pos">Order for {{ kind_labels[sec.kind] }}</label><input class="narrow" id="sec_{{ sec.id }}_pos" name="sec_{{ sec.id }}_pos" type="number" value="{{ sec.position }}"></td>
+  <td><strong>{{ kind_labels[sec.kind] }}</strong>{% if sec.category %}: {{ sec.category.name }}{% elif sec.article_type %}: {{ sec.article_type|replace(',', ' + ') }}{% endif %}</td>
+  <td><label class="sr" for="sec_{{ sec.id }}_title">Heading</label><input id="sec_{{ sec.id }}_title" name="sec_{{ sec.id }}_title" value="{{ sec.title }}" maxlength="120" placeholder="(default)"></td>
+  <td><label class="sr" for="sec_{{ sec.id }}_limit">Stories</label><input class="narrow" id="sec_{{ sec.id }}_limit" name="sec_{{ sec.id }}_limit" type="number" min="1" max="12" value="{{ sec.item_limit }}"></td>
+  <td><label class="check"><input type="checkbox" name="sec_{{ sec.id }}_visible" {{ 'checked' if sec.visible }}> <span class="sr">Visible</span>Shown</label></td>
+  <td><label class="check"><input type="checkbox" name="sec_{{ sec.id }}_delete"> <span class="sr">Remove section</span>Remove</label></td></tr>
+{% endfor %}</tbody></table></div>
+<p class="help">Sections display in ascending order. Gaps are fine (10, 20, 30…).</p>
+<h3>Add a section</h3>
+<div class="formgrid">
+  <div class="fld"><label for="new_kind">Type</label><select id="new_kind" name="new_kind"><option value="">— none —</option>{% for v, l in kinds %}<option value="{{ v }}">{{ l }}</option>{% endfor %}</select></div>
+  <div class="fld"><label for="new_category">Category (for “Category”)</label><select id="new_category" name="new_category"><option value="">—</option>{% for c in categories %}<option value="{{ c.id }}">{{ c.name }}</option>{% endfor %}</select></div>
+  <div class="fld"><label for="new_types">Content type (for “Content type”)</label><select id="new_types" name="new_types"><option value="">—</option>{% for v, l in type_choices %}<option value="{{ v }}">{{ l }}</option>{% endfor %}</select></div>
+  <div class="fld"><label for="new_title">Heading (optional)</label><input id="new_title" name="new_title" maxlength="120"></div>
+  <div class="fld"><label for="new_limit">Stories</label><input id="new_limit" name="new_limit" type="number" min="1" max="12" value="4"></div>
+</div></section>
+<p><button class="btn" type="submit">Save homepage</button></p>
+</form>
+{% endblock %}

@@ -1,0 +1,9 @@
+tests/
+docs/
+.github/
+.venv/
+migrations/
+instance/
+*.md
+pytest.ini
+dev.py

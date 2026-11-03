@@ -1,0 +1,17 @@
+Flask>=3.1,<3.2
+Flask-SQLAlchemy>=3.1,<3.2
+SQLAlchemy>=2.0.30,<2.1
+Flask-Migrate>=4.1,<5
+Flask-Login>=0.6.3,<0.7
+Flask-WTF>=1.2,<2
+Flask-Limiter>=3.8,<5
+psycopg[binary]>=3.2,<4
+python-dotenv>=1.0
+nh3>=0.2.18
+Markdown>=3.6
+Pillow>=10.3
+requests>=2.32
+email-validator>=2.1
+tzdata>=2024.1
+# Uncomment only if STORAGE_PROVIDER=s3 (S3, Cloudflare R2, Backblaze, Spaces):
+# boto3>=1.34

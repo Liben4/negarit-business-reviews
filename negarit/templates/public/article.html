@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% from "public/_macros.html" import story, kicker, crumbs, ranked, byline, img %}
+{% set hide_footer_nl = True %}
+{% set share_url = url or canonical %}
+{% set og_img = absolute(a.featured_media.url) if a.featured_media else (S.default_og_image or abs_url('/og-default.png')) %}
+{% block title %}{{ a.seo_title or a.title }} | {{ SITE_NAME }}{% endblock %}
+{% block description %}{{ a.description }}{% endblock %}
+{% block robots %}<meta name="robots" content="{{ 'noindex, nofollow' if (preview or a.is_demo) else 'index, follow, max-image-preview:large' }}">{% endblock %}
+{% block og %}
+<meta property="og:type" content="article"><meta property="og:site_name" content="{{ SITE_NAME }}">
+<meta property="og:title" content="{{ a.og_title or a.seo_title or a.title }}"><meta property="og:description" content="{{ a.og_description or a.description }}">
+{% if canonical %}<meta property="og:url" content="{{ canonical }}">{% endif %}
+<meta property="og:image" content="{{ og_img }}">{% if a.featured_media %}<meta property="og:image:width" content="{{ a.featured_media.width }}"><meta property="og:image:height" content="{{ a.featured_media.height }}"><meta property="og:image:alt" content="{{ a.featured_media.alt_text }}">{% endif %}
+{% if a.published_at %}<meta property="article:published_time" content="{{ a.published_at|isoz }}">{% endif %}<meta property="article:modified_time" content="{{ a.updated_at|isoz }}">
+{% if a.category %}<meta property="article:section" content="{{ a.category.name }}">{% endif %}{% for t in a.tags %}<meta property="article:tag" content="{{ t.name }}">{% endfor %}
+{% if a.author %}<meta property="article:author" content="{{ abs_url('/author/' ~ a.author.slug) }}">{% endif %}
+<meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="{{ a.og_title or a.seo_title or a.title }}"><meta name="twitter:description" content="{{ a.og_description or a.description }}"><meta name="twitter:image" content="{{ og_img }}">
+{% endblock %}
+{% block head %}
+{% if not preview %}
+<script type="application/ld+json">{{ {"@context":"https://schema.org","@type":{"opinion":"OpinionNewsArticle","analysis":"AnalysisNewsArticle"}.get(a.article_type,"NewsArticle"),
+ "headline":a.title,"description":a.description,"image":[og_img],"datePublished":a.published_at|isoz,"dateModified":a.updated_at|isoz,
+ "mainEntityOfPage":{"@type":"WebPage","@id":canonical},"articleSection":a.category.name if a.category else "",
+ "keywords":a.tags|map(attribute='name')|join(', '),"isAccessibleForFree":a.access_level != 'premium',
+ "author":{"@type":"Person","name":a.author.name if a.author else SITE_NAME,"url":abs_url('/author/' ~ a.author.slug) if a.author else SITE_URL},
+ "publisher":{"@type":"Organization","name":SITE_NAME,"logo":{"@type":"ImageObject","url":absolute(S.logo_url or '/og-default.png')}}}|tojson }}</script>
+{% endif %}
+{% endblock %}
+{% block content %}
+{% if preview %}<div class="preview-bar">Preview — status: <strong>{{ STATUS_LABELS.get(a.status, a.status) }}</strong>. Not public{% if a.status == 'scheduled' and a.published_at %} until {{ a.published_at|localdatetime }}{% endif %}.</div>{% endif %}
+{% if a.is_demo %}<div class="preview-bar demo-bar">Sample content — fictional, for development and testing only.</div>{% endif %}
+<div class="article-layout">
+<article class="post" data-site="{{ SITE_NAME }} — {{ url or canonical }}">
+  {{ crumbs(breadcrumbs) }}
+  <header class="post-head">
+    {{ kicker(a) }}
+    {% if a.article_type == 'sponsored' %}<p class="content-note sponsored-note" role="note"><strong>Sponsored content.</strong> Paid for by {{ a.sponsor_name or 'an advertiser' }}. It was not produced by the {{ SITE_NAME }} newsroom and does not reflect its editorial judgement.</p>
+    {% elif a.article_type == 'opinion' %}<p class="content-note" role="note"><strong>Opinion.</strong> The views expressed are the author's own and not necessarily those of {{ SITE_NAME }}.</p>
+    {% elif a.article_type == 'analysis' %}<p class="content-note" role="note"><strong>Analysis.</strong> Interpretation and context based on reporting and data.</p>{% endif %}
+    <h1 class="post-title">{{ a.title }}</h1>
+    {% if a.subtitle %}<p class="post-deck">{{ a.subtitle }}</p>{% endif %}
+    <div class="post-meta">
+      {% if a.author %}<a class="author-chip" href="/author/{{ a.author.slug }}">{% if a.author.image %}{{ img(a.author.image, "40px", False, "", "avatar") }}{% endif %}<span><strong>{{ a.author.name }}</strong>{% if a.author.position %}<small>{{ a.author.position }}</small>{% endif %}</span></a>{% endif %}
+      <p class="dates">{% if a.published_at %}<time datetime="{{ a.published_at|isoz }}">Published {{ a.published_at|localdate }}</time>{% else %}Draft{% endif %}
+        {% if a.published_at and (a.updated_at - a.published_at).total_seconds() > 3600 %}<span class="sep" aria-hidden="true">·</span><time datetime="{{ a.updated_at|isoz }}">Updated {{ a.updated_at|localdate }}</time>{% endif %}
+        <span class="sep" aria-hidden="true">·</span>{{ a.minutes }} min read</p>
+    </div>
+    {% include "public/_share.html" %}
+  </header>
+  {% if a.featured_media %}
+  <figure class="post-hero">{{ img(a.featured_media, "(min-width:1100px) 1000px, 100vw", True) }}
+    {% set cap = a.cover_caption or a.featured_media.caption %}{% if cap or a.featured_media.credit %}<figcaption>{{ cap }}{% if a.featured_media.credit %} <span class="credit">{{ a.featured_media.credit }}</span>{% endif %}</figcaption>{% endif %}</figure>
+  {% endif %}
+  {% set parts = a.body_html|split_after(3) %}
+  <div class="prose">{{ parts[0]|safe }}</div>
+  {% set inline_ads = ad('article') %}{% for ad in inline_ads %}<div class="in-article-ad">{% include "public/_ad.html" %}</div>{% endfor %}
+  {% if parts[1] %}<div class="prose">{{ parts[1]|safe }}</div>{% endif %}
+  {% if a.gallery %}
+  <section class="gallery" aria-label="Image gallery"><h2 class="rail-h">Gallery</h2><div class="gallery-grid">
+    {% for g in a.gallery %}<figure><a href="{{ g.media.url }}" target="_blank" rel="noopener">{{ img(g.media, "(min-width:700px) 33vw, 50vw") }}</a>{% if g.media.caption or g.media.credit %}<figcaption>{{ g.media.caption }}{% if g.media.credit %} <span class="credit">{{ g.media.credit }}</span>{% endif %}</figcaption>{% endif %}</figure>{% endfor %}
+  </div></section>
+  {% endif %}
+  {% if a.sources_html %}<aside class="sources" aria-label="Sources"><h2 class="rail-h">Sources &amp; attribution</h2>{{ a.sources_html|safe }}</aside>{% endif %}
+  {% if a.tags %}<p class="tags" aria-label="Tags">{% for t in a.tags if t.active %}<a href="/tag/{{ t.slug }}">{{ t.name }}</a>{% endfor %}</p>{% endif %}
+  {% if older or newer %}
+  <nav class="article-nav" aria-label="More in {{ a.category.name }}">
+    {% if older %}<a class="prev" href="{{ older.url_path }}" rel="prev"><span>Previous in {{ a.category.name }}</span><strong>{{ older.title }}</strong></a>{% else %}<span></span>{% endif %}
+    {% if newer %}<a class="next" href="{{ newer.url_path }}" rel="next"><span>Next in {{ a.category.name }}</span><strong>{{ newer.title }}</strong></a>{% endif %}
+  </nav>{% endif %}
+  {% if a.author %}
+  <aside class="author-box" aria-label="About the author">
+    {% if a.author.image %}{{ img(a.author.image, "72px", False, "", "avatar lg") }}{% endif %}
+    <div><h2 class="rail-h">About the author</h2><p><a class="hl sm" href="/author/{{ a.author.slug }}">{{ a.author.name }}</a>{% if a.author.position %} <span class="muted">— {{ a.author.position }}</span>{% endif %}</p>
+      {% if a.author.bio %}<p class="small">{{ a.author.bio|truncate(240) }}</p>{% endif %}
+      {% if a.author.socials %}<p class="socials">{% for label, u in a.author.socials %}<a href="{{ u }}" rel="noopener me" target="_blank">{{ label }}</a>{% endfor %}</p>{% endif %}</div>
+  </aside>
+  {% endif %}
+  {% if S.newsletter_enabled == '1' %}<section class="inline-nl" aria-label="Newsletter">{% set nlid = 'nl-article' %}{% include "public/_newsletter.html" %}</section>{% endif %}
+  {% if comment_form is not none and S.comments_enabled == '1' and not preview %}
+  <section class="comments" id="comments" aria-labelledby="comments-h"><h2 class="rail-h" id="comments-h">Comments{% if comments %} ({{ comments|length }}){% endif %}</h2>
+    {% if comment_state == 'pending' %}<p class="notice ok" role="status">Thanks — your comment will appear once it has been reviewed.</p>{% elif comment_state == 'invalid' %}<p class="notice err" role="alert">Please check your name and comment and try again.</p>{% endif %}
+    {% for c in comments %}<article class="comment"><p class="who"><strong>{{ c.name }}</strong> <time class="muted" datetime="{{ c.created_at|isoz }}">{{ c.created_at|localdate }}</time></p><p>{{ c.body }}</p></article>{% endfor %}
+    <form method="post" action="/comments/{{ a.id }}" class="comment-form">
+      <p class="small muted">Comments are moderated. Be civil and stay on topic.</p>
+      <label>Name<input name="name" required maxlength="80" autocomplete="name"></label>
+      <label>Email <span class="muted">(optional, never published)</span><input name="email" type="email" maxlength="255" autocomplete="email"></label>
+      <label>Comment<textarea name="body" rows="4" required minlength="3" maxlength="2000"></textarea></label>
+      <input class="hp" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+      <button class="btn" type="submit">Post comment</button>
+    </form>
+  </section>
+  {% endif %}
+</article>
+<aside class="rail post-rail">
+  {% if most_read %}{{ ranked(most_read, "Most read") }}{% endif %}
+  {% for ad in ad('sidebar') %}{% include "public/_ad.html" %}{% endfor %}
+</aside>
+</div>
+{% if related %}
+<section class="block related" aria-label="Related articles">
+  <header class="sec-head"><h2>Related</h2></header>
+  <div class="grid grid-3">{% for r in related %}{{ story(r, "standard") }}{% endfor %}</div>
+</section>
+{% endif %}
+{% endblock %}

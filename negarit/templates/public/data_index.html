@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% from "public/_macros.html" import indicator, crumbs, story, section_head %}
+{% block title %}Data & Economic Indicators | {{ SITE_NAME }}{% endblock %}
+{% block description %}Economic and business indicators for Ethiopia and the region, each with its source, unit and date.{% endblock %}
+{% block content %}
+{{ crumbs(breadcrumbs) }}
+<header class="page-head"><p class="eyebrow">NBR Data</p><h1 class="page-title">Data &amp; economic indicators</h1>
+  <p class="page-intro">Every figure shows its source, unit and the period it describes. Values are published as supplied by the source; where a series has not been updated recently, we say so.</p></header>
+{% if topics %}
+<section class="block" aria-label="Indicators">{{ section_head("Indicators", None) }}
+  <div class="grid grid-4 indicators">{% for topic, items in topics.items() %}{% for ds, s in items %}{{ indicator(ds, s, fmt_num, period_label, True) }}{% endfor %}{% endfor %}</div></section>
+{% else %}
+<section class="empty-state"><h2>No indicators published yet</h2><p>Economic indicators will appear here as they are added with their sources.</p></section>
+{% endif %}
+{% if stories %}<section class="block" aria-label="Data reports and analysis">{{ section_head("Data reports & analysis", "/data-reports", "See all") }}
+  <div class="grid grid-3">{% for a in stories %}{{ story(a, "standard") }}{% endfor %}</div></section>{% endif %}
+{% if reports %}<section class="block" aria-label="Downloadable reports">{{ section_head("Downloadable reports", None) }}
+  <ul class="reports big">{% for r in reports %}<li><a href="{{ r.file_url }}" rel="noopener" target="_blank">{{ r.title }}</a>
+    <span class="muted small"> · {{ r.source_name }}{% if r.published_on %} · {{ r.published_on.strftime('%d %b %Y').lstrip('0') }}{% endif %}</span>
+    {% if r.summary %}<p class="small">{{ r.summary }}</p>{% endif %}</li>{% endfor %}</ul>
+  <p class="muted small">Reports are published by the source named; the link opens the publisher's file in a new tab.</p></section>{% endif %}
+{% endblock %}

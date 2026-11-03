@@ -1,0 +1,13 @@
+{% extends "admin/base.html" %}
+{% from "admin/_macros.html" import csrf %}
+{% block title %}Revision history{% endblock %}
+{% block content %}
+<div class="page-head"><h1>Revision history</h1><a class="btn secondary" href="{{ url_for('admin.article_edit', id=a.id) }}">← Back to article</a></div>
+<p class="help note"><strong>{{ a.title }}</strong>. A snapshot is saved on every manual save and workflow step (autosaves do not create revisions). The newest 60 are kept.</p>
+<div class="table-wrap"><table><thead><tr><th scope="col">When (UTC)</th><th scope="col">By</th><th scope="col">Action</th><th scope="col">Status then</th><th scope="col">Headline</th><th scope="col"><span class="sr">Actions</span></th></tr></thead><tbody>
+{% for r in revs %}<tr><td>{{ r.created_at.strftime('%Y-%m-%d %H:%M') }}</td><td>{{ r.user_name or '—' }}</td><td>{{ r.kind|replace('_',' ') }}</td>
+  <td><span class="pill {{ r.status }}">{{ STATUS_LABELS.get(r.status, r.status) }}</span></td>
+  <td><details><summary>{{ r.title }}</summary>{% if r.subtitle %}<p class="muted">{{ r.subtitle }}</p>{% endif %}<div class="rev-body">{{ r.body_html|safe }}</div></details></td>
+  <td class="row-actions">{% if can_restore %}<form method="post" action="{{ url_for('admin.article_revision_restore', id=a.id, rid=r.id) }}" class="inline" data-confirm="Replace the current text with this version? The current text is saved as a revision first.">{{ csrf() }}<button class="btn small secondary" type="submit">Restore</button></form>{% endif %}</td></tr>
+{% else %}<tr><td colspan="6" class="muted">No revisions yet.</td></tr>{% endfor %}</tbody></table></div>
+{% endblock %}

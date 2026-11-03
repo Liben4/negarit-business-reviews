@@ -1,0 +1,43 @@
+{% macro csrf() %}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% endmacro %}
+
+{% macro post_button(label, url, confirm=None, danger=False, small=True) %}
+{% if url.startswith('mailto:') %}<a class="btn {{ 'small' if small }} secondary" href="{{ url }}">{{ label }}</a>
+{% else %}<form method="post" action="{{ url }}" class="inline" {% if confirm %}data-confirm="{{ confirm }}"{% endif %}>{{ csrf() }}<button class="btn {{ 'small' if small }} {{ 'danger' if danger else 'secondary' }}" type="submit">{{ label }}</button></form>{% endif %}
+{% endmacro %}
+
+{% macro pager(p, extra='') %}
+{% if p and p.pages > 1 %}<nav class="pager" aria-label="Pagination">
+  {% if p.has_prev %}<a href="?page={{ p.prev_num }}{{ extra }}">← Previous</a>{% endif %}<span>Page {{ p.page }} of {{ p.pages }} · {{ p.total|num }} items</span>{% if p.has_next %}<a href="?page={{ p.next_num }}{{ extra }}">Next →</a>{% endif %}
+</nav>{% endif %}
+{% endmacro %}
+
+{% macro field(fld) %}
+{% if fld.kind == 'bool' %}
+<div class="fld {{ 'full' if fld.full }}"><label class="check"><input type="checkbox" name="{{ fld.name }}" {{ 'checked' if fld.value }}> {{ fld.label }}</label>{% if fld.help %}<p class="help">{{ fld.help }}</p>{% endif %}</div>
+{% else %}
+<div class="fld {{ 'full' if fld.full or fld.kind in ('markdown','textarea') }}">
+  <label for="f-{{ fld.name }}">{{ fld.label }}{% if fld.required %} <span class="req" aria-hidden="true">*</span>{% endif %}</label>
+  {% if fld.kind in ('textarea', 'markdown') %}
+    <textarea id="f-{{ fld.name }}" name="{{ fld.name }}" rows="{{ fld.rows or 4 }}" {% if fld.maxlength %}maxlength="{{ fld.maxlength }}"{% endif %} {% if fld.kind == 'markdown' %}class="mono"{% endif %}>{{ fld.value or '' }}</textarea>
+  {% elif fld.kind == 'select' %}
+    <select id="f-{{ fld.name }}" name="{{ fld.name }}">{% for v, l in fld.options %}<option value="{{ v }}" {{ 'selected' if (fld.value|string) == (v|string) }}>{{ l }}</option>{% endfor %}</select>
+  {% elif fld.kind in ('media', 'media_url') %}
+    <div class="media-field" data-target="f-{{ fld.name }}" data-mode="{{ 'id' if fld.kind == 'media' else 'url' }}">
+      <input type="hidden" id="f-{{ fld.name }}" name="{{ fld.name }}" value="{{ fld.value or '' }}">
+      <img class="media-preview" alt="" src="{{ fld.preview or '' }}" {% if not fld.preview %}hidden{% endif %} width="120" height="80">
+      <div class="row-gap"><button type="button" class="btn small secondary" data-pick>Choose image…</button><button type="button" class="btn small secondary" data-clear>Clear</button></div>
+    </div>
+  {% elif fld.kind == 'datetime' %}
+    <input id="f-{{ fld.name }}" type="datetime-local" name="{{ fld.name }}" value="{{ fld.value|inputdt if fld.value else '' }}">
+  {% elif fld.kind == 'date' %}
+    <input id="f-{{ fld.name }}" type="date" name="{{ fld.name }}" value="{{ fld.value.isoformat() if fld.value else '' }}">
+  {% elif fld.kind == 'color' %}
+    <input id="f-{{ fld.name }}" type="color" name="{{ fld.name }}" value="{{ fld.value or '#000000' }}" class="color">
+  {% else %}
+    <input id="f-{{ fld.name }}" type="{{ {'email':'email','url':'url','password':'password','number':'number'}.get(fld.kind,'text') }}" name="{{ fld.name }}" value="{{ '' if fld.kind == 'password' else (fld.value if fld.value is not none else '') }}"
+      {% if fld.maxlength %}maxlength="{{ fld.maxlength }}"{% endif %} {% if fld.required and fld.kind != 'password' %}required{% endif %} {% if fld.placeholder %}placeholder="{{ fld.placeholder }}"{% endif %} {% if fld.kind == 'password' %}autocomplete="new-password"{% endif %}>
+  {% endif %}
+  {% if fld.help %}<p class="help">{{ fld.help }}</p>{% endif %}
+</div>
+{% endif %}
+{% endmacro %}

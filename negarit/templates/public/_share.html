@@ -1,0 +1,12 @@
+{% set u = (share_url or '')|urlencode %}{% set t = a.title|urlencode %}
+<div class="share" role="group" aria-label="Share this article">
+  <span class="share-l">Share</span>
+  <a href="https://www.facebook.com/sharer/sharer.php?u={{ u }}" target="_blank" rel="noopener noreferrer">Facebook</a>
+  <a href="https://twitter.com/intent/tweet?url={{ u }}&amp;text={{ t }}" target="_blank" rel="noopener noreferrer">X</a>
+  <a href="https://www.linkedin.com/sharing/share-offsite/?url={{ u }}" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+  <a href="https://t.me/share/url?url={{ u }}&amp;text={{ t }}" target="_blank" rel="noopener noreferrer">Telegram</a>
+  <a href="https://wa.me/?text={{ t }}%20{{ u }}" target="_blank" rel="noopener noreferrer">WhatsApp</a>
+  <a href="mailto:?subject={{ t }}&amp;body={{ u }}">Email</a>
+  <button type="button" class="copy-link" data-url="{{ share_url }}">Copy link</button>
+  <button type="button" class="print-btn">Print</button>
+</div>

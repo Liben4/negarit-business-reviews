@@ -1,0 +1,27 @@
+{% extends "admin/base.html" %}
+{% block title %}Analytics{% endblock %}
+{% macro bars(series, idx=1) %}{% set mx = (series|map(attribute=idx)|max) or 1 %}
+<svg class="chart bars" viewBox="0 0 {{ series|length * 10 }} 100" preserveAspectRatio="none" role="img" aria-label="Bar chart">
+  {% for row in series %}<rect x="{{ loop.index0 * 10 + 1 }}" width="8" y="{{ 100 - (row[idx] / mx * 96)|round(1) }}" height="{{ (row[idx] / mx * 96)|round(1) }}"><title>{{ row[0] }}: {{ row[idx] }}</title></rect>{% endfor %}</svg>
+<p class="muted small">{{ series[0][0] }} → {{ series[-1][0] }} · peak {{ mx|num }}</p>{% endmacro %}
+{% block content %}
+<div class="page-head"><h1>Analytics</h1>
+  <nav class="tabs inline" aria-label="Period">{% for d in (7, 30, 90, 365) %}<a href="{{ url_for('admin.analytics_page', days=d) }}" {% if d == days %}aria-current="page"{% endif %}>{{ d }} days</a>{% endfor %}</nav></div>
+<form method="get" class="filters" aria-label="Custom date range"><label for="start" class="sr">From</label><input id="start" type="date" name="start" value="{{ r.start.isoformat() }}"> <label for="end" class="sr">To</label><input id="end" type="date" name="end" value="{{ r.end.isoformat() }}"><button class="btn secondary" type="submit">Apply range</button>
+  <span class="muted small">Showing {{ r.start.isoformat() }} to {{ r.end.isoformat() }} (UTC days, max 2 years)</span></form>
+<div class="stats"><div><b>{{ r.total|num }}</b><span>Page views in range</span></div><div><b>{{ o.total_views|num }}</b><span>All-time page views</span></div><div><b>{{ o.today_views|num }}</b><span>Today</span></div>
+  <div><b>{{ r.published_total|num }}</b><span>Articles published in range</span></div><div><b>{{ r.new_subscribers|num }}</b><span>New subscribers in range</span></div><div><b>{{ o.subscribers|num }}</b><span>Confirmed subscribers</span></div></div>
+<section class="panel"><h2>Views per day</h2>{% if r.total %}{{ bars(r.series) }}{% else %}<p class="muted">No page views recorded in this range yet.</p>{% endif %}</section>
+<div class="grid2">
+  <section class="panel"><h2>Publishing activity <span class="muted small">(articles live, per week)</span></h2>
+    {% if r.publishing %}<table class="mini"><tbody>{% for wk, n in r.publishing %}<tr><td>Week of {{ wk }}</td><td class="right"><strong>{{ n }}</strong></td></tr>{% endfor %}</tbody></table>{% else %}<p class="muted">No articles went live in this range.</p>{% endif %}</section>
+  <section class="panel"><h2>Newsletter subscriber growth</h2>
+    {% if r.new_subscribers %}{{ bars(r.growth, 2) }}<p class="muted small">Cumulative sign-ups (all statuses) at the end of the range: {{ r.growth[-1][2]|num }}. New in range: {{ r.new_subscribers|num }}.</p>{% else %}<p class="muted">No new subscribers in this range. Total sign-ups so far: {{ (r.growth[-1][2] if r.growth else 0)|num }}.</p>{% endif %}</section>
+  <section class="panel"><h2>Top articles</h2>{% if r.articles %}<ol class="plain num">{% for a, n in r.articles %}<li><a href="{{ a.url_path }}" target="_blank" rel="noopener">{{ a.title }}</a> <span class="muted">— {{ n|num }}</span></li>{% endfor %}</ol>{% else %}<p class="muted">No data yet.</p>{% endif %}</section>
+  <section class="panel"><h2>Popular categories</h2>{% if r.categories %}<ol class="plain num">{% for c, n in r.categories %}<li>{{ c.name }} <span class="muted">— {{ n|num }}</span></li>{% endfor %}</ol>{% else %}<p class="muted">No data yet.</p>{% endif %}</section>
+  <section class="panel"><h2>Popular authors</h2>{% if r.authors %}<ol class="plain num">{% for au, n in r.authors %}<li>{{ au.name }} <span class="muted">— {{ n|num }}</span></li>{% endfor %}</ol>{% else %}<p class="muted">No data yet.</p>{% endif %}</section>
+  <section class="panel"><h2>Traffic sources</h2>{% if r.sources %}<ul class="plain">{% for s, n in r.sources %}<li>{{ s|title }} <span class="muted">— {{ n|num }}</span></li>{% endfor %}</ul>
+    {% if r.referrers %}<h3>Top referrers</h3><ul class="plain">{% for h, n in r.referrers %}<li>{{ h }} <span class="muted">— {{ n|num }}</span></li>{% endfor %}</ul>{% endif %}{% else %}<p class="muted">No data yet.</p>{% endif %}</section>
+</div>
+<p class="help">First-party, cookieless counts: no IP addresses stored; bots and Do-Not-Track visitors excluded. Nothing here is estimated. Connect Google Analytics 4 / Search Console under <a href="{{ url_for('admin.seo') }}">SEO</a> for deeper analysis.</p>
+{% endblock %}

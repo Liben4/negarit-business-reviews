@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+{% block title %}Newsletter | {{ SITE_NAME }}{% endblock %}
+{% block robots %}<meta name="robots" content="noindex">{% endblock %}
+{% block content %}
+<section class="status-page"><h1 class="page-title">{{ "Thank you" if ok else "Something's not right" }}</h1><p>{{ message }}</p><p><a class="btn" href="/">Back to the homepage</a></p></section>
+{% endblock %}

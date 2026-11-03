@@ -1,0 +1,10 @@
+<form class="newsletter wrap" method="post" action="/newsletter/subscribe" id="{{ nlid|default('newsletter') }}">
+  <div class="nl-copy"><h2 id="{{ nlid|default('newsletter') }}-h">{{ S.newsletter_heading }}</h2><p>{{ S.newsletter_text }}</p></div>
+  <div class="nl-fields">
+    <label class="sr" for="{{ nlid|default('newsletter') }}-email">Email address</label>
+    <input id="{{ nlid|default('newsletter') }}-email" type="email" name="email" placeholder="Email address" required maxlength="255" autocomplete="email">
+    <input class="hp" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+    <button class="btn" type="submit">Subscribe</button>
+    <p class="msg" role="status" aria-live="polite"></p>
+  </div>
+</form>

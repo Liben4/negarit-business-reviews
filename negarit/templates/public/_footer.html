@@ -1,0 +1,94 @@
+
+<footer class="site-footer">
+  {% if S.newsletter_enabled == '1' and not hide_footer_nl %}
+  <section class="newsletter-band" aria-labelledby="nl-h">
+    {% include "public/_newsletter.html" %}
+  </section>
+  {% endif %}
+
+  <div class="wrap foot-grid">
+
+    <!-- Brand -->
+    <div class="foot-about">
+      <p class="foot-brand">Negarit <em>Business Review</em></p>
+      <p class="muted">{{ SITE_TAGLINE }}</p>
+
+      {% if S.address or S.contact_email or S.contact_phone %}
+      <p class="muted small">
+        {{ S.address }}
+        {% if S.address and (S.contact_email or S.contact_phone) %}<br>{% endif %}
+        {% if S.contact_email %}
+        <a href="mailto:{{ S.contact_email }}">{{ S.contact_email }}</a>
+        {% endif %}
+        {% if S.contact_phone %}<br>{{ S.contact_phone }}{% endif %}
+      </p>
+      {% endif %}
+    </div>
+
+    <!-- Sections -->
+    <nav aria-label="Sections">
+      <h2 class="foot-h">Sections</h2>
+      {% for c in (nav_primary + nav_more)[:10] %}
+      <a href="/{{ c.slug }}">{{ c.name }}</a>
+      {% endfor %}
+    </nav>
+
+    <!-- Company -->
+    <nav aria-label="Company">
+      <h2 class="foot-h">Company</h2>
+      {% for p in footer_pages %}
+      <a href="/{{ p.slug }}">{{ p.title }}</a>
+      {% endfor %}
+      <a href="/contact">Contact</a>
+      <a href="/rss.xml">RSS</a>
+    </nav>
+
+    <!-- Social media -->
+    <div class="foot-social">
+      <h2 class="foot-h">Follow Negarit</h2>
+      <p class="muted small">Stay connected with the latest business, technology and economic insights.</p>
+
+      <div class="social-links" aria-label="Social media links">
+
+        {% for label, key, icon in [
+          ('Facebook', 'social_facebook', 'facebook'),
+          ('X', 'social_x', 'x'),
+          ('LinkedIn', 'social_linkedin', 'linkedin'),
+          ('YouTube', 'social_youtube', 'youtube'),
+          ('Telegram', 'social_telegram', 'telegram'),
+          ('Instagram', 'social_instagram', 'instagram')
+        ] %}
+          {% if S[key] %}
+          <a class="social-icon"
+             href="{{ S[key] }}"
+             target="_blank"
+             rel="noopener noreferrer me"
+             aria-label="Follow Negarit Business Review on {{ label }}"
+             title="{{ label }}">
+
+            {% if icon == 'facebook' %}
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13.5 21v-8h2.7l.4-3.1h-3.1v-2c0-.9.3-1.5 1.6-1.5h1.7V3.6c-.3 0-1.3-.1-2.4-.1-2.5 0-4.2 1.5-4.2 4.3v2.1H7.4V13h2.8v8z"/></svg>
+            {% elif icon == 'x' %}
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18.9 2H22l-6.8 7.8L23.2 22h-6.3L12 14.6 5.5 22H2.3l7.3-8.4L1.8 2h6.5l4.5 6.8zm-1.1 17.9h1.7L7.3 4H5.5z"/></svg>
+            {% elif icon == 'linkedin' %}
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5.2 3a2.2 2.2 0 1 0 0 4.4 2.2 2.2 0 0 0 0-4.4zM3.3 9h3.8v12H3.3zm6.1 0H13v1.6h.1c.5-.9 1.7-1.9 3.5-1.9 3.8 0 4.5 2.5 4.5 5.7V21h-3.8v-5.8c0-1.4 0-3.2-2-3.2s-2.3 1.5-2.3 3.1V21H9.4z"/></svg>
+            {% elif icon == 'youtube' %}
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M23 7a3 3 0 0 0-2.1-2.1C19 4.4 12 4.4 12 4.4s-7 0-8.9.5A3 3 0 0 0 1 7a31 31 0 0 0-.5 5 31 31 0 0 0 .5 5 3 3 0 0 0 2.1 2.1c1.9.5 8.9.5 8.9.5s7 0 8.9-.5A3 3 0 0 0 23 17a31 31 0 0 0 .5-5 31 31 0 0 0-.5-5zM9.7 15.5v-7l6 3.5z"/></svg>
+            {% elif icon == 'telegram' %}
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m21.8 3.5-3.3 16c-.2 1.1-.8 1.4-1.7.9l-4.8-3.5-2.3 2.2c-.3.3-.5.5-1 .5l.3-4.9 8.9-8c.4-.3-.1-.5-.6-.2L6.3 13.6l-4.7-1.5c-1-.3-1-1 .2-1.5L20.3 3c.9-.3 1.7.2 1.5.5z"/></svg>
+            {% elif icon == 'instagram' %}
+            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="17.5" cy="6.5" r="1.2"/></svg>
+            {% endif %}
+          </a>
+          {% endif %}
+        {% endfor %}
+
+      </div>
+    </div>
+
+  </div>
+
+  <div class="wrap legal">
+    <span>© {{ SITE_NAME }}</span>
+  </div>
+</footer>

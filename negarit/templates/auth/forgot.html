@@ -1,0 +1,11 @@
+{% extends "admin/base.html" %}
+{% from "admin/_macros.html" import csrf %}
+{% block title %}Reset password{% endblock %}
+{% block content %}
+<form method="post" class="authcard">
+  <p class="logo dark">Negarit <em>Business Review</em></p><h1>Reset your password</h1>{{ csrf() }}
+  <label>Email<input type="email" name="email" required autofocus></label>
+  <button class="btn" type="submit">Send reset link</button>
+  <p class="help"><a href="{{ url_for('auth.login') }}">Back to sign in</a></p>
+</form>
+{% endblock %}

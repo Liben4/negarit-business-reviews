@@ -1,0 +1,29 @@
+{% extends "admin/base.html" %}
+{% from "admin/_macros.html" import csrf %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<div class="page-head"><h1>Dashboard</h1><a class="btn" href="{{ url_for('admin.article_new') }}">New article</a></div>
+<div class="stats">
+  <div><b>{{ (counts.get('published',0) + counts.get('scheduled',0) + counts.get('draft',0) + counts.get('review',0) + counts.get('approved',0) + counts.get('archived',0))|num }}</b><span>Total articles</span></div>
+  <div><b>{{ counts.get('published',0)|num }}</b><span>Published</span></div>
+  <div><b>{{ counts.get('draft',0)|num }}</b><span>Drafts</span></div>
+  <div><b>{{ counts.get('scheduled',0)|num }}</b><span>Scheduled</span></div>
+  <div><b>{{ counts.get('archived',0)|num }}</b><span>Archived</span></div>
+  <div><b>{{ (counts.get('review',0) + counts.get('approved',0))|num }}</b><span>In review / approved</span></div>
+  {% if people %}<div><b>{{ people.authors|num }}</b><span>Authors</span></div><div><b>{{ people.editors|num }}</b><span>Editors &amp; admins</span></div>{% endif %}
+  {% if stats %}<div><b>{{ stats.total_views|num }}</b><span>Total views</span></div><div><b>{{ stats.today_views|num }}</b><span>Today's views</span></div><div><b>{{ stats.subscribers|num }}</b><span>Subscribers</span></div>{% endif %}
+  {% if pending_comments is not none %}<div><a href="{{ url_for('admin.comments') }}"><b>{{ pending_comments }}</b><span>Comments awaiting review</span></a></div>{% endif %}
+</div>
+<div class="grid2">
+  <section class="panel"><h2>{{ 'Awaiting editorial review' if can('article.publish') else 'Your articles in review' }}</h2>
+    {% if review %}<ul class="plain">{% for a in review %}<li><a href="{{ url_for('admin.article_edit', id=a.id) }}">{{ a.title }}</a> <span class="muted">— {{ a.author.name if a.author else '—' }}</span></li>{% endfor %}</ul>{% else %}<p class="muted">Nothing waiting.</p>{% endif %}</section>
+  {% if stats %}<section class="panel"><h2>Most read (30 days)</h2>
+    {% if most_read %}<ol class="plain num">{% for a in most_read %}<li><a href="{{ a.url_path }}" target="_blank" rel="noopener">{{ a.title }}</a> <span class="muted">— {{ a.view_count|num }} views</span></li>{% endfor %}</ol>{% else %}<p class="muted">No published articles yet.</p>{% endif %}</section>{% endif %}
+</div>
+<section class="panel"><h2>Recently updated</h2>
+  <div class="table-wrap"><table><thead><tr><th>Headline</th><th>Status</th><th>Section</th><th>Updated</th></tr></thead><tbody>
+  {% for a in recent %}<tr><td><a href="{{ url_for('admin.article_edit', id=a.id) }}"><strong>{{ a.title }}</strong></a></td><td><span class="pill {{ a.status }}">{{ STATUS_LABELS[a.status] }}</span></td><td>{{ a.category.name if a.category else '—' }}</td><td>{{ a.updated_at|localdatetime }}</td></tr>
+  {% else %}<tr><td colspan="4" class="muted">No articles yet.</td></tr>{% endfor %}</tbody></table></div></section>
+{% if activity %}<section class="panel"><h2>Recent activity</h2><ul class="plain">{% for l in activity %}<li><span class="muted">{{ l.created_at|localdatetime }}</span> · {{ l.user_email or 'system' }} · {{ l.action }} — {{ l.summary }}</li>{% endfor %}</ul>
+  {% if can('*') %}<p><a href="{{ url_for('admin.logs') }}">All activity →</a></p>{% endif %}</section>{% endif %}
+{% endblock %}

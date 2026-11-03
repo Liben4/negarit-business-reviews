@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% from "public/_macros.html" import crumbs %}
+{% block title %}Contact | {{ SITE_NAME }}{% endblock %}
+{% block description %}Send a news tip, advertising enquiry or message to the {{ SITE_NAME }} team.{% endblock %}
+{% block content %}
+{{ crumbs(breadcrumbs) }}
+<div class="contact">
+  <div>
+    <header class="page-head"><h1 class="page-title">Contact us</h1><p class="page-intro">News tips, advertising, partnerships, careers or general questions — we read every message.</p></header>
+    {% if sent %}<p class="notice ok" role="status">Thank you — your message has been received.</p>{% else %}
+    <form method="post" action="/contact" class="form">
+      <input type="hidden" name="ts" value="{{ ts }}">
+      {% if form.errors %}<p class="notice err" role="alert">Please correct the highlighted fields.</p>{% endif %}
+      <label>Your name<input name="name" value="{{ form.name.data or '' }}" required maxlength="120" autocomplete="name"></label>
+      <label>Email<input name="email" type="email" value="{{ form.email.data or '' }}" required maxlength="255" autocomplete="email"></label>
+      <label>Inquiry type<select name="inquiry_type">{% for v, l in form.inquiry_type.choices %}<option value="{{ v }}" {{ 'selected' if form.inquiry_type.data == v }}>{{ l }}</option>{% endfor %}</select></label>
+      <label>Subject<input name="subject" value="{{ form.subject.data or '' }}" required maxlength="200"></label>
+      <label>Message<textarea name="message" rows="7" required minlength="10" maxlength="5000">{{ form.message.data or '' }}</textarea></label>
+      <input class="hp" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+      <button class="btn" type="submit">Send message</button>
+    </form>{% endif %}
+  </div>
+  <aside class="contact-aside">
+    <h2 class="rail-h">Details</h2>
+    {% if S.contact_email %}<p><a href="mailto:{{ S.contact_email }}">{{ S.contact_email }}</a></p>{% endif %}
+    {% if S.contact_phone %}<p>{{ S.contact_phone }}</p>{% endif %}
+    {% if S.address %}<p>{{ S.address }}</p>{% endif %}
+    {% if not (S.contact_email or S.contact_phone or S.address) %}<p class="muted">Use the form to reach the newsroom.</p>{% endif %}
+  </aside>
+</div>
+{% endblock %}

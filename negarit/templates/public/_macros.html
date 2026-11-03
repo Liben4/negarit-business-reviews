@@ -1,0 +1,79 @@
+{# Responsive image from a Media row. `sizes` describes the rendered width. #}
+{% macro img(m, sizes="100vw", eager=False, alt=None, cls="") %}
+{%- if m -%}
+<img class="{{ cls }}" src="{{ m.url }}" {% if m.srcset %}srcset="{{ m.srcset }}" sizes="{{ sizes }}"{% endif %} width="{{ m.width or 1600 }}" height="{{ m.height or 900 }}" alt="{{ alt if alt is not none else m.alt_text }}" {% if eager %}fetchpriority="high"{% else %}loading="lazy"{% endif %} decoding="async">
+{%- endif -%}
+{% endmacro %}
+
+{% macro thumb(a, sizes="(min-width:900px) 25vw, 100vw", eager=False, cls="") %}
+<a class="thumb {{ cls }}" href="{{ a.url_path }}" tabindex="-1" aria-hidden="true">
+  {% if a.featured_media %}{{ img(a.featured_media, sizes, eager, alt="") }}{% else %}<span class="ph"><span>N</span></span>{% endif %}
+</a>
+{% endmacro %}
+
+{% macro kicker(a) %}
+<p class="kicker">{% if a.category %}{% if a.category.active %}<a href="/{{ a.category.slug }}">{{ a.category.name }}</a>{% else %}<span>{{ a.category.name }}</span>{% endif %}{% endif %}{% if a.article_type != 'news' %}<span class="type type-{{ a.article_type }}">{{ a.type_label }}</span>{% endif %}{% if a.is_demo %}<span class="type demo">Sample</span>{% endif %}</p>
+{% endmacro %}
+
+{% macro indicator(ds, s, fmt, label, show_topic=False) %}
+<article class="indicator">
+  {% if show_topic %}<p class="eyebrow">{{ ds.topic }}</p>{% endif %}
+  <h3 class="ind-title"><a href="/data/{{ ds.slug }}">{{ ds.title }}</a></h3>
+  {% if s.last %}
+  <p class="ind-value">{{ fmt(s.last.value, ds.decimals) }} <span class="ind-unit">{{ ds.unit }}</span></p>
+  {% if s.change is not none %}<p class="ind-change {{ 'up' if s.change > 0 else 'down' if s.change < 0 else '' }}"><span aria-hidden="true">{{ '▲' if s.change > 0 else '▼' if s.change < 0 else '■' }}</span>
+    {{ 'Up' if s.change > 0 else 'Down' if s.change < 0 else 'Unchanged' }}{% if s.change != 0 %} {{ fmt(s.change|abs, ds.decimals) }}{% endif %} vs previous ({{ label(s.prev.period, ds.frequency) }})</p>{% endif %}
+  <p class="ind-meta">As of {{ s.label }}{% if s.stale %} <span class="stale">Not recent</span>{% endif %}</p>
+  {% else %}<p class="ind-meta">No data yet</p>{% endif %}
+  <p class="ind-meta">Source: {{ ds.source_name or 'not stated' }}{% if ds.is_demo %} <span class="type demo">Sample</span>{% endif %}</p>
+</article>
+{% endmacro %}
+
+{% macro byline(a, date=True) %}
+<p class="byline">{% if a.author %}<a href="/author/{{ a.author.slug }}">{{ a.author.name }}</a>{% endif %}{% if date and a.published_at %}<span class="sep" aria-hidden="true">·</span><time datetime="{{ a.published_at|isoz }}">{{ a.published_at|localdate }}</time>{% endif %}</p>
+{% endmacro %}
+
+{# lead: big image + headline + deck; standard: image left/top; compact: text only; row: small thumb right #}
+{% macro story(a, kind="standard", sizes="(min-width:900px) 25vw, 100vw", eager=False) %}
+<article class="story story-{{ kind }}">
+  {% if kind in ("lead", "standard", "result") %}{{ thumb(a, sizes if kind != "result" else "(min-width:700px) 220px, 100vw", eager) }}{% endif %}
+  <div class="story-body">
+    {{ kicker(a) }}
+    <h3 class="hl"><a href="{{ a.url_path }}">{{ a.title }}</a></h3>
+    {% if a.article_type == 'sponsored' and a.sponsor_name %}<p class="sponsor-line">Sponsored by {{ a.sponsor_name }}</p>{% endif %}
+    {% if kind in ("lead", "standard", "result") and a.summary %}<p class="deck">{{ a.summary }}</p>{% endif %}
+    {{ byline(a) }}
+  </div>
+  {% if kind == "row" %}{{ thumb(a, "120px", False, "thumb-sm") }}{% endif %}
+</article>
+{% endmacro %}
+
+{% macro section_head(title, href=None, more="See all") %}
+<header class="sec-head"><h2>{% if href %}<a href="{{ href }}">{{ title }}</a>{% else %}{{ title }}{% endif %}</h2>{% if href %}<a class="sec-more" href="{{ href }}">{{ more }} →</a>{% endif %}</header>
+{% endmacro %}
+
+{% macro ranked(items, title) %}
+<section class="ranked" aria-label="{{ title }}"><h2 class="rail-h">{{ title }}</h2>
+<ol>{% for a in items %}<li><span class="rank" aria-hidden="true">{{ loop.index }}</span><div>{{ kicker(a) }}<h3 class="hl sm"><a href="{{ a.url_path }}">{{ a.title }}</a></h3></div></li>{% endfor %}</ol></section>
+{% endmacro %}
+
+{% macro pager(pagination, base_path, extra='') %}
+{% if pagination and (pagination.has_prev or pagination.has_next) %}
+<nav class="pager" aria-label="Pagination">
+  {% if pagination.has_prev %}<a rel="prev" href="{{ base_path }}?page={{ pagination.prev_num }}{{ extra }}">← Newer</a>{% else %}<span></span>{% endif %}
+  <span class="muted">Page {{ pagination.page }} of {{ pagination.pages }}</span>
+  {% if pagination.has_next %}<a rel="next" href="{{ base_path }}?page={{ pagination.next_num }}{{ extra }}">Older →</a>{% else %}<span></span>{% endif %}
+</nav>
+{% endif %}
+{% endmacro %}
+
+{% macro crumbs(items) %}
+{% if items %}<nav class="crumbs" aria-label="Breadcrumb"><ol>{% for label, href in items %}<li>{% if href %}<a href="{{ href }}">{{ label }}</a>{% else %}<span aria-current="page">{{ label|truncate(60) }}</span>{% endif %}</li>{% endfor %}</ol></nav>{% endif %}
+{% endmacro %}
+
+{% macro sponsored() %}
+{% for ad in ad('sponsored') %}
+<aside class="sponsored" aria-label="Sponsored" data-ad="{{ ad.id }}"><span class="ad-label">Sponsored · {{ ad.advertiser }}</span>
+  <a href="/ad/{{ ad.id }}" rel="sponsored noopener" target="_blank">{% if ad.media %}<img src="{{ ad.media.thumb_url }}" alt="" width="{{ ad.media.width }}" height="{{ ad.media.height }}" loading="lazy" decoding="async">{% endif %}<span class="hl sm">{{ ad.headline or ad.title }}</span></a></aside>
+{% endfor %}
+{% endmacro %}

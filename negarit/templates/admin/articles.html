@@ -1,0 +1,26 @@
+{% extends "admin/base.html" %}
+{% from "admin/_macros.html" import pager, csrf %}
+{% block title %}Articles{% endblock %}
+{% macro th(key, label) %}<th scope="col" {% if sort == key %}aria-sort="{{ 'ascending' if direction == 'asc' else 'descending' }}"{% endif %}><a class="sortlink" href="{{ url_for('admin.articles', status=status, q=term, type=atype, category=cat, author=auth, sort=key, dir=('asc' if (sort == key and direction == 'desc') else 'desc')) }}">{{ label }}{% if sort == key %} {{ '▲' if direction == 'asc' else '▼' }}{% endif %}</a></th>{% endmacro %}
+{% block content %}
+<div class="page-head"><h1>Articles</h1><a class="btn" href="{{ url_for('admin.article_new') }}">New article</a></div>
+<nav class="tabs" aria-label="Status">
+  <a href="{{ url_for('admin.articles') }}" {% if not status %}aria-current="page"{% endif %}>All active</a>
+  {% for s in statuses %}<a href="{{ url_for('admin.articles', status=s) }}" {% if status == s %}aria-current="page"{% endif %}>{{ STATUS_LABELS[s] }}</a>{% endfor %}
+</nav>
+<form method="get" class="filters"><input type="hidden" name="status" value="{{ status }}">
+  <input type="search" name="q" value="{{ term }}" placeholder="Search headlines" maxlength="100" aria-label="Search headlines">
+  <select name="category" aria-label="Category"><option value="">All sections</option>{% for c in categories %}<option value="{{ c.id }}" {{ 'selected' if cat == c.id }}>{{ c.name }}</option>{% endfor %}</select>
+  <select name="type" aria-label="Type"><option value="">All types</option>{% for v, l in types %}<option value="{{ v }}" {{ 'selected' if atype == v }}>{{ l }}</option>{% endfor %}</select>
+  {% if authors %}<select name="author" aria-label="Author"><option value="">All authors</option>{% for au in authors %}<option value="{{ au.id }}" {{ 'selected' if auth == au.id }}>{{ au.name }}</option>{% endfor %}</select>{% endif %}
+  <button class="btn secondary" type="submit">Filter</button></form>
+<div class="table-wrap"><table>
+<thead><tr>{{ th('title','Headline') }}{{ th('status','Status') }}{{ th('type','Type') }}<th scope="col">Section</th><th scope="col">Author</th>{{ th('published','Publish time') }}{{ th('views','Views') }}{{ th('updated','Updated') }}<th scope="col"><span class="sr">Actions</span></th></tr></thead><tbody>
+{% for a in pagination.items %}<tr>
+  <td>{% if can_edit(a, current_user) or current_user.can('article.edit_any') %}<a href="{{ url_for('admin.article_edit', id=a.id) }}"><strong>{{ a.title }}</strong></a>{% else %}<strong>{{ a.title }}</strong>{% endif %}{% if a.is_featured %} <span class="pill featured">Featured</span>{% endif %}{% if a.is_breaking %} <span class="pill breaking">Breaking</span>{% endif %}{% if a.is_demo %} <span class="pill demo">Sample</span>{% endif %}</td>
+  <td><span class="pill {{ a.status }}">{{ STATUS_LABELS[a.status] }}</span></td><td>{{ a.type_label }}</td><td>{{ a.category.name if a.category else '—' }}</td>
+  <td>{{ a.author.name if a.author else '—' }}</td><td>{{ a.published_at|localdatetime or '—' }}</td><td>{{ a.view_count|num }}</td><td>{{ a.updated_at|localdatetime }}</td>
+  <td class="row-actions"><a href="{{ url_for('admin.article_preview', id=a.id) }}" target="_blank" rel="noopener">Preview</a></td></tr>
+{% else %}<tr><td colspan="9" class="muted">No articles match.</td></tr>{% endfor %}</tbody></table></div>
+{{ pager(pagination, '&status=' ~ status ~ '&q=' ~ (term|urlencode) ~ ('&category=' ~ cat if cat else '') ~ ('&type=' ~ atype if atype else '') ~ ('&author=' ~ auth if auth else '') ~ '&sort=' ~ sort ~ '&dir=' ~ direction) }}
+{% endblock %}

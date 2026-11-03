@@ -1,0 +1,12 @@
+{% extends "admin/base.html" %}
+{% from "admin/_macros.html" import csrf, field, post_button %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+<div class="page-head"><h1>{{ title }}</h1><div class="head-actions">{% for l, u in links %}<a class="btn secondary" href="{{ u }}">{{ l }}</a>{% endfor %}{% if back %}<a class="btn secondary" href="{{ back }}">← Back</a>{% endif %}</div></div>
+{% if note %}<p class="help note">{{ note }}</p>{% endif %}
+<form method="post" class="panel formgrid" novalidate>{{ csrf() }}
+  {% for fld in fields %}{{ field(fld) }}{% endfor %}
+  <div class="fld full"><button class="btn" type="submit">{{ submit }}</button></div>
+</form>
+{% if extra_actions %}<div class="panel danger-zone">{% for label, url, confirm, danger in extra_actions %}{{ post_button(label, url, confirm, danger, False) }}{% endfor %}</div>{% endif %}
+{% endblock %}

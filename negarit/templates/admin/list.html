@@ -1,0 +1,18 @@
+{% extends "admin/base.html" %}
+{% from "admin/_macros.html" import post_button, pager %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+<div class="page-head"><h1>{{ title }}</h1><div class="head-actions">{% for label, url in toolbar %}<a class="btn secondary" href="{{ url }}">{{ label }}</a>{% endfor %}{% if new_url %}<a class="btn" href="{{ new_url }}">{{ new_label }}</a>{% endif %}</div></div>
+{% if note %}<p class="help note">{{ note }}</p>{% endif %}
+{% if tabs %}<nav class="tabs" aria-label="Filter">{% for label, url, active in tabs %}<a href="{{ url }}" {% if active %}aria-current="page"{% endif %}>{{ label }}</a>{% endfor %}</nav>{% endif %}
+{% if q is not none %}<form method="get" class="filters"><input type="search" name="q" value="{{ q }}" placeholder="Search…" maxlength="100" aria-label="Search"><button class="btn secondary" type="submit">Search</button></form>{% endif %}
+<div class="table-wrap"><table>
+  <thead><tr>{% for h in headers %}<th scope="col">{{ h }}</th>{% endfor %}{% if rows and rows[0].actions is defined %}<th scope="col"><span class="sr">Actions</span></th>{% endif %}</tr></thead>
+  <tbody>
+  {% for r in rows %}<tr>
+    {% for c in r.cells %}<td>{% if loop.first and r.link %}<a href="{{ r.link }}"><strong>{{ c }}</strong></a>{% else %}{{ c }}{% endif %}</td>{% endfor %}
+    {% if r.actions is defined %}<td class="row-actions">{% for label, url, confirm, danger in r.actions %}{{ post_button(label, url, confirm, danger) }}{% endfor %}</td>{% endif %}
+  </tr>{% else %}<tr><td colspan="{{ headers|length + 1 }}" class="muted">{{ empty }}</td></tr>{% endfor %}
+  </tbody></table></div>
+{{ pager(pagination, ('&q=' ~ q|urlencode) if q else '') }}
+{% endblock %}

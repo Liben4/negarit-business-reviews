@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% from "public/_macros.html" import story, section_head, ranked, sponsored, indicator, kicker %}
+{% block title %}{{ S.default_seo_title }}{% endblock %}
+{% block breaking %}
+{% if ticker %}<div class="ticker" role="region" aria-label="Breaking news"><div class="wrap ticker-in"><strong class="ticker-label">{{ ticker_label }}</strong>
+  <ul class="ticker-list">{% for a in ticker %}<li><a href="{{ a.url_path }}">{{ a.title }}</a></li>{% endfor %}</ul></div></div>{% endif %}
+{% endblock %}
+{% block head %}
+<script type="application/ld+json">{{ {"@context":"https://schema.org","@graph":[
+ {"@type":"Organization","@id":SITE_URL~"/#org","name":SITE_NAME,"url":SITE_URL,"slogan":SITE_TAGLINE,"logo":absolute(S.logo_url or '/og-default.png'),
+  "sameAs":[S.social_facebook,S.social_x,S.social_linkedin,S.social_youtube,S.social_telegram]|select|list},
+ {"@type":"WebSite","@id":SITE_URL~"/#site","url":SITE_URL,"name":SITE_NAME,"publisher":{"@id":SITE_URL~"/#org"},
+  "potentialAction":{"@type":"SearchAction","target":SITE_URL~"/search?q={search_term_string}","query-input":"required name=search_term_string"}}]}|tojson }}</script>
+{% endblock %}
+{% block content %}
+<h1 class="sr">{{ SITE_NAME }} — {{ SITE_TAGLINE }}</h1>
+{% if lead %}
+<section class="front" aria-label="Top stories">
+  <div class="front-lead">{{ story(lead, "lead", "(min-width:1100px) 620px, 100vw", True) }}</div>
+  <div class="front-second">{% for a in secondary %}{{ story(a, "row") }}{% endfor %}</div>
+  <aside class="rail">
+    {% if trending %}{{ ranked(trending, "Trending") }}{% endif %}
+    {% for ad in ad('sidebar') %}{% include "public/_ad.html" %}{% endfor %}
+  </aside>
+</section>
+
+{% for b in blocks %}
+  {% if b.kind == 'latest' %}
+  <section class="block" aria-label="{{ b.title }}">{{ section_head(b.title, None) }}
+    <div class="grid grid-4">{% for a in b['items'] %}{{ story(a, "standard") }}{% endfor %}</div></section>
+    {% for ad in ad('homepage') %}{% if loop.first %}<div class="home-ad">{% include "public/_ad.html" %}</div>{% endif %}{% endfor %}
+  {% elif b.kind == 'top' %}
+  <section class="block" aria-label="{{ b.title }}">{{ section_head(b.title, None) }}
+    <div class="top-grid">{% for a in b['items'] %}{{ story(a, "standard" if loop.first else "row", "(min-width:900px) 40vw, 100vw") }}{% endfor %}</div></section>
+  {% elif b.kind == 'picks' %}
+  <section class="block picks" aria-label="{{ b.title }}">{{ section_head(b.title, None) }}
+    <div class="grid grid-4">{% for a in b['items'] %}{{ story(a, "standard") }}{% endfor %}</div></section>
+  {% elif b.kind == 'category_group' %}
+  <div class="cat-grid">{% for cb in b.blocks %}
+    <section class="block half" aria-label="{{ cb.title }}">{{ section_head(cb.title, cb.href) }}
+      {{ story(cb['items'][0], "lead", "(min-width:900px) 45vw, 100vw") }}
+      <div class="list">{% for a in cb['items'][1:] %}{{ story(a, "compact") }}{% endfor %}</div></section>{% endfor %}</div>
+  {% elif b.kind == 'type' %}
+  <section class="block tint" aria-label="{{ b.title }}"><div class="tint-in">{{ section_head(b.title, b.href, "See all") }}
+    <div class="grid grid-4 opinion">{% for a in b['items'] %}
+      <article class="op"><p class="kicker"><span class="type type-{{ a.article_type }}">{{ a.type_label }}</span>{% if a.is_demo %}<span class="type demo">Sample</span>{% endif %}</p>
+        <h3 class="hl"><a href="{{ a.url_path }}">{{ a.title }}</a></h3>
+        <p class="deck">{{ a.summary }}</p><p class="byline">{% if a.author %}<a href="/author/{{ a.author.slug }}">{{ a.author.name }}</a>{% endif %}</p></article>{% endfor %}</div></div></section>
+  {% elif b.kind == 'data' %}
+  <section class="block" aria-label="{{ b.title }}">{{ section_head(b.title, '/data', 'All data') }}
+    {% if b.cards %}<div class="grid grid-4 indicators">{% for ds, s in b.cards %}{{ indicator(ds, s, fmt_num, period_label) }}{% endfor %}</div>{% endif %}
+    {% if b.reports %}<ul class="reports">{% for r in b.reports %}<li><a href="{{ r.file_url }}" rel="noopener" target="_blank">{{ r.title }}</a><span class="muted small"> · {{ r.source_name }}{% if r.published_on %} · {{ r.published_on.strftime('%b %Y') }}{% endif %}</span></li>{% endfor %}</ul>{% endif %}</section>
+  {% elif b.kind == 'most_read' %}
+  <div class="pair pair-rail"><section class="block">{{ ranked(b['items'], b.title) }}</section><section class="block">{{ sponsored() }}</section></div>
+  {% endif %}
+{% endfor %}
+{% else %}
+<section class="empty-state"><h2>{{ SITE_NAME }}</h2><p>{{ SITE_TAGLINE }}</p><p class="muted">No stories have been published yet. Check back soon.</p></section>
+{% endif %}
+{% endblock %}

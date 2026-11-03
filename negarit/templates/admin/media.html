@@ -1,0 +1,19 @@
+{% extends "admin/base.html" %}
+{% from "admin/_macros.html" import csrf, pager %}
+{% block title %}Media library{% endblock %}
+{% block content %}
+<div class="page-head"><h1>Media library</h1>
+  {% if can('media.upload') %}<label class="btn">Upload images<input type="file" id="lib-upload" accept="image/jpeg,image/png,image/webp,image/gif" multiple hidden></label>{% endif %}</div>
+<p class="help note">Uploads are validated, stripped of metadata and converted to responsive WebP automatically (JPEG, PNG, WebP, GIF · up to 4 MB). Always add alt text.</p>
+<p id="lib-msg" class="muted" role="status"></p>
+<nav class="tabs" aria-label="Filter"><a href="{{ url_for('admin.media_library') }}" {% if not only_unused %}aria-current="page"{% endif %}>All</a><a href="{{ url_for('admin.media_library', unused=1) }}" {% if only_unused %}aria-current="page"{% endif %}>Unused</a></nav>
+{% if only_unused and pagination.total and can('media.delete') %}<form method="post" action="{{ url_for('admin.media_delete_unused') }}" class="inline" data-confirm="Permanently delete all unused images ({{ pagination.total }})? Images referenced anywhere are never deleted.">{{ csrf() }}<button class="btn danger" type="submit">Delete all {{ pagination.total }} unused</button></form>{% endif %}
+<form method="get" class="filters"><input type="search" name="q" value="{{ q }}" placeholder="Search filename, alt text, caption, credit" maxlength="100" aria-label="Search media"><button class="btn secondary" type="submit">Search</button></form>
+<div class="media-grid">
+{% for m in pagination.items %}
+  <article class="media-card"><a href="{{ url_for('admin.media_edit', id=m.id) }}"><img src="{{ m.thumb_url }}" alt="{{ m.alt_text }}" width="240" height="160" loading="lazy"></a>
+    <div class="media-meta"><strong>{{ m.filename|truncate(28) }}</strong><span class="muted">{{ m.width }}×{{ m.height }} · {{ (m.size_bytes/1024)|round|int }} KB</span>{% set n = usage(m) %}<span class="muted small">{{ 'Used in ' ~ n ~ (' place' if n == 1 else ' places') if n else 'Unused' }}</span>{% if not m.alt_text %}<span class="pill draft">No alt text</span>{% endif %}</div></article>
+{% else %}<p class="muted">No images yet.</p>{% endfor %}
+</div>
+{{ pager(pagination, ('&q=' ~ q|urlencode) if q else '') }}
+{% endblock %}

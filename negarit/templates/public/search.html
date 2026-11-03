@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% from "public/_macros.html" import story, crumbs, pager %}
+{% block title %}{{ ('Search: ' ~ q ~ ' | ') if q else 'Search | ' }}{{ SITE_NAME }}{% endblock %}
+{% block robots %}<meta name="robots" content="noindex, follow">{% endblock %}
+{% block content %}
+{{ crumbs(breadcrumbs) }}
+<header class="page-head"><h1 class="page-title">Search</h1>
+<form action="/search" method="get" class="search-page" role="search">
+  <div class="search-row"><label class="sr" for="sq">Search</label><input id="sq" type="search" name="q" value="{{ q }}" maxlength="100" placeholder="Articles, headlines, authors, categories, tags" autofocus><button class="btn" type="submit">Search</button></div>
+  <div class="filters">
+    <label>Section <select name="category"><option value="">All</option>{% for c in categories %}<option value="{{ c.slug }}" {{ 'selected' if c.slug == cat_slug }}>{{ c.name }}</option>{% endfor %}</select></label>
+    <label>Type <select name="type"><option value="">All</option>{% for v, l in types %}<option value="{{ v }}" {{ 'selected' if v == atype }}>{{ l }}</option>{% endfor %}</select></label>
+    <label>Date <select name="period"><option value="">Any time</option><option value="7" {{ 'selected' if period == '7' }}>Past week</option><option value="30" {{ 'selected' if period == '30' }}>Past month</option><option value="365" {{ 'selected' if period == '365' }}>Past year</option></select></label>
+    <label>Sort <select name="sort"><option value="relevance">Relevance</option><option value="date" {{ 'selected' if sort == 'date' }}>Newest</option></select></label>
+  </div>
+</form></header>
+{% if q %}
+  {% if facets and (facets.authors or facets.categories or facets.tags) %}
+  <p class="facets"><span class="muted">Also matching:</span>
+    {% for au in facets.authors %}<a href="/author/{{ au.slug }}">Author · {{ au.name }}</a>{% endfor %}
+    {% for c in facets.categories %}<a href="/{{ c.slug }}">Section · {{ c.name }}</a>{% endfor %}
+    {% for t in facets.tags %}<a href="/tag/{{ t.slug }}">Tag · {{ t.name }}</a>{% endfor %}</p>{% endif %}
+  {% if pagination and pagination.items %}
+    <p class="muted" role="status">{{ pagination.total }} result{{ '' if pagination.total == 1 else 's' }} for “{{ q }}”</p>
+    <div class="stack results">{% for a in pagination.items %}{{ story(a, "result") }}{% endfor %}</div>{{ pager(pagination, base_path, extra) }}
+  {% else %}<p class="empty-state" role="status">No results for “{{ q }}”. Try a broader term or clear the filters.</p>{% endif %}
+{% endif %}
+{% endblock %}

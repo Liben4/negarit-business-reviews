@@ -1,0 +1,26 @@
+{% extends "admin/base.html" %}
+{% from "admin/_macros.html" import csrf %}
+{% block title %}Data points: {{ ds.title }}{% endblock %}
+{% block content %}
+<div class="page-head"><h1>{{ ds.title }}</h1><div class="head-actions"><a class="btn secondary" href="{{ url_for('admin.dataset_edit', id=ds.id) }}">Dataset settings</a><a class="btn secondary" href="{{ url_for('admin.datasets') }}">← All datasets</a>{% if ds.published %}<a class="btn secondary" href="/data/{{ ds.slug }}" target="_blank" rel="noopener">View public page ↗</a>{% endif %}</div></div>
+<p class="help note">Unit: <strong>{{ ds.unit }}</strong> · {{ ds.frequency|title }} · Source: <strong>{{ ds.source_name or 'NOT SET (required to publish)' }}</strong> · {{ 'Published' if ds.published else 'Not published' }}. Enter values exactly as the source reports them.</p>
+{% if chart %}<section class="panel"><figure class="chart-wrap admin-chart">{{ chart }}</figure></section>{% endif %}
+<div class="grid2">
+<section class="panel"><h2>Add or update one value</h2>
+  <form method="post" action="{{ url_for('admin.dataset_point_add', id=ds.id) }}" novalidate>{{ csrf() }}
+    <div class="fld"><label for="period">Period</label><input id="period" name="period" placeholder="2026-03 · 2026-Q2 · 2026 · 2026-03-15" required></div>
+    <div class="fld"><label for="value">Value ({{ ds.unit }})</label><input id="value" name="value" inputmode="decimal" required></div>
+    <div class="fld"><label for="note">Note (optional)</label><input id="note" name="note" maxlength="200" placeholder="e.g. provisional estimate"></div>
+    <button class="btn" type="submit">Save value</button></form>
+  <p class="help">An existing period is updated rather than duplicated.</p></section>
+<section class="panel"><h2>Import from CSV</h2>
+  <form method="post" action="{{ url_for('admin.dataset_import', id=ds.id) }}" novalidate>{{ csrf() }}
+    <div class="fld"><label for="csv">One value per line: <code>period,value[,note]</code></label><textarea id="csv" name="csv" rows="7" class="mono" placeholder="2026-01,14.2&#10;2026-02,13.8,provisional"></textarea></div>
+    <button class="btn" type="submit">Import</button></form>
+  <p class="help">Everything is validated first; if any line is invalid nothing is imported. No thousands separators.</p></section></div>
+<section class="panel"><h2>Values ({{ total }}{{ ', newest 200 shown' if total > 200 }})</h2>
+<div class="table-wrap"><table><thead><tr><th scope="col">Period</th><th scope="col">Value</th><th scope="col">Note</th><th scope="col"><span class="sr">Actions</span></th></tr></thead><tbody>
+{% for p in points %}<tr><td>{{ label(p.period, ds.frequency) }} <span class="muted small">({{ p.period.isoformat() }})</span></td><td>{{ fmt(p.value, ds.decimals) }}</td><td>{{ p.note }}</td>
+  <td class="row-actions"><form method="post" action="{{ url_for('admin.dataset_point_delete', id=ds.id, pid=p.id) }}" class="inline" data-confirm="Delete this value?">{{ csrf() }}<button class="btn small danger" type="submit">Delete</button></form></td></tr>
+{% else %}<tr><td colspan="4" class="muted">No values yet.</td></tr>{% endfor %}</tbody></table></div></section>
+{% endblock %}

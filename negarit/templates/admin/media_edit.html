@@ -1,0 +1,13 @@
+{% extends "admin/base.html" %}
+{% from "admin/_macros.html" import csrf, field, post_button %}
+{% block title %}Image details{% endblock %}
+{% block content %}
+<div class="page-head"><h1>Image details</h1><a class="btn secondary" href="{{ url_for('admin.media_library') }}">← Library</a></div>
+<div class="grid2">
+  <section class="panel"><img class="media-big" src="{{ m.url }}" alt="{{ m.alt_text }}" width="{{ m.width }}" height="{{ m.height }}">
+    <p class="muted small">{{ m.filename }} · {{ m.width }}×{{ m.height }} · {{ (m.size_bytes/1024)|round|int }} KB · {{ m.content_type }} · {{ m.variant_map|length }} size(s) · used {{ uses }}×</p>
+    <p class="small"><input class="urlbox" readonly value="{{ m.url }}" aria-label="Image URL"></p></section>
+  <form method="post" class="panel" novalidate>{{ csrf() }}<div class="formgrid">{% for fld in fields %}{{ field(fld) }}{% endfor %}</div>{% if can('media.upload') %}<p><button class="btn" type="submit">Save details</button></p>{% endif %}
+    {% if can('media.delete') %}<hr>{{ post_button('Delete image', url_for('admin.media_delete', id=m.id), 'Delete this image permanently?', True, False) }}{% if uses %}<p class="help">In use — remove it from its articles/authors/ads before deleting.</p>{% endif %}{% endif %}</form>
+</div>
+{% endblock %}

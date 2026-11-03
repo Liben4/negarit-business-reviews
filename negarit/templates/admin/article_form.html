@@ -1,0 +1,89 @@
+{% extends "admin/base.html" %}
+{% from "admin/_macros.html" import csrf %}
+{% block title %}{{ 'Edit' if a.id else 'New' }} article{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ asset('vendor/quill.snow.css') }}">{% endblock %}
+{% block scripts %}<script src="{{ asset('vendor/quill.js') }}" defer></script>{% endblock %}
+{% block content %}
+<div class="page-head"><h1>{{ 'Edit article' if a.id else 'New article' }}</h1>
+  <div class="head-actions">{% if a.id %}<span class="pill {{ a.status }}">{{ STATUS_LABELS[a.status] }}</span><a class="btn secondary" href="{{ url_for('admin.article_preview', id=a.id) }}" target="_blank" rel="noopener">Preview</a>{% if a.is_live %}<a class="btn secondary" href="{{ a.url_path }}" target="_blank" rel="noopener">View live ↗</a>{% endif %}{% endif %}</div></div>
+{% if locked %}<p class="notice">This article is <strong>{{ STATUS_LABELS[a.status]|lower }}</strong> and can no longer be edited by you. An editor can send it back to draft.</p>{% endif %}
+{% if a.review_note and a.status == 'draft' %}<p class="notice err"><strong>Editor's note:</strong> {{ a.review_note }}</p>{% endif %}
+<form method="post" class="editor" id="article-form" novalidate data-article-id="{{ a.id or '' }}" data-version="{{ version }}" data-autosave="{{ '1' if autosave_ok and not locked else '0' }}" data-locked="{{ '1' if locked else '0' }}">{{ csrf() }}
+<fieldset class="editor-main" {{ 'disabled' if locked }}>
+  <div class="fld"><label for="title">Headline <span class="req">*</span></label><input id="title" name="title" class="title-in" value="{{ a.title or '' }}" maxlength="255" required></div>
+  <div class="fld"><label for="subtitle">Subtitle / deck</label><input id="subtitle" name="subtitle" value="{{ a.subtitle or '' }}" maxlength="300"></div>
+  <div class="fld"><label for="excerpt">Excerpt <span class="muted">(cards and search results)</span></label><textarea id="excerpt" name="excerpt" rows="2" maxlength="400">{{ a.excerpt or '' }}</textarea></div>
+  <div class="fld"><div class="md-head"><label id="body-label">Article body</label><p class="save-status" id="save-status" role="status" aria-live="polite">{% if locked %}Read-only{% elif not autosave_ok %}Autosave is off for {{ STATUS_LABELS[a.status]|lower }} articles. Use Save.{% else %}Autosave on{% endif %}</p></div>
+    <div id="toolbar" class="ql-toolbar-host" role="toolbar" aria-label="Formatting">
+      <span class="ql-formats"><select class="ql-header" aria-label="Heading"><option value="2">Heading</option><option value="3">Subheading</option><option selected>Paragraph</option></select></span>
+      <span class="ql-formats"><button class="ql-bold" type="button" aria-label="Bold"></button><button class="ql-italic" type="button" aria-label="Italic"></button><button class="ql-underline" type="button" aria-label="Underline"></button></span>
+      <span class="ql-formats"><button class="ql-blockquote" type="button" aria-label="Quotation"></button><button class="ql-list" value="bullet" type="button" aria-label="Bulleted list"></button><button class="ql-list" value="ordered" type="button" aria-label="Numbered list"></button></span>
+      <span class="ql-formats"><button class="ql-link" type="button" aria-label="Link"></button><button class="ql-image" type="button" aria-label="Insert image from library"></button><button class="ql-clean" type="button" aria-label="Clear formatting"></button></span></div>
+    <div id="editor" class="quill-host" aria-labelledby="body-label"></div>
+    <textarea id="body_html" name="body_html" hidden>{{ a.body_html or '' }}</textarea></div>
+  <div class="fld"><label for="sources_md">Sources &amp; references <span class="muted">(shown under the article; Markdown links allowed)</span></label><textarea id="sources_md" name="sources_md" rows="3" class="mono">{{ a.sources_md or '' }}</textarea></div>
+  <details class="panel-lite"><summary>SEO &amp; social</summary>
+    <div class="fld"><label for="seo_title">SEO title</label><input id="seo_title" name="seo_title" value="{{ a.seo_title or '' }}" maxlength="120" data-count="60"><p class="help count"></p></div>
+    <div class="fld"><label for="meta_description">Meta description</label><textarea id="meta_description" name="meta_description" rows="2" maxlength="320" data-count="160">{{ a.meta_description or '' }}</textarea><p class="help count"></p></div>
+    <div class="fld"><label for="og_title">Social title (Open Graph / X)</label><input id="og_title" name="og_title" value="{{ a.og_title or '' }}" maxlength="120"></div>
+    <div class="fld"><label for="og_description">Social description</label><textarea id="og_description" name="og_description" rows="2" maxlength="320">{{ a.og_description or '' }}</textarea></div>
+    <div class="fld"><label for="canonical_override">Canonical URL override <span class="muted">(leave empty)</span></label><input id="canonical_override" name="canonical_override" value="{{ a.canonical_override or '' }}" maxlength="500" placeholder="https://…"></div>
+    <div class="fld"><label for="slug">URL slug</label><input id="slug" name="slug" value="{{ a.slug or '' }}" maxlength="200" placeholder="generated from the headline"><p class="help">Article URL: /{{ a.category.slug if a.category else 'section' }}/{{ a.slug or 'slug' }}</p></div>
+    <p class="help">The social image is the featured image.</p>
+  </details>
+</fieldset>
+<aside class="editor-side">
+  <section class="panel">
+    <h2>Status &amp; publishing</h2>
+    <p><span class="pill {{ a.status }}">{{ STATUS_LABELS[a.status] }}</span>{% if a.published_at %} <span class="muted small">{{ 'Goes live' if a.status == 'scheduled' else 'Published' }} {{ a.published_at|localdatetime }}</span>{% endif %}</p>
+    {% if warnings %}<ul class="warn">{% for w in warnings %}<li>{{ w }}</li>{% endfor %}</ul>{% endif %}
+    {% if can_publish %}<div class="fld"><label for="publish_at">Schedule for <span class="muted">(Addis Ababa time)</span></label><input id="publish_at" type="datetime-local" name="publish_at" value="{{ a.published_at|inputdt if a.status == 'scheduled' else '' }}"></div>{% endif %}
+    {% if can_publish and a.id %}<div class="fld"><label for="review_note">Note to writer <span class="muted">(sent with “Request revisions” / kept with approvals)</span></label><textarea id="review_note" name="review_note" rows="2" maxlength="500"></textarea></div>{% endif %}
+    <div class="actions">
+      {% if not locked %}<button class="btn secondary" type="submit" name="action" value="save">Save</button>{% endif %}
+      {% for key, label in actions %}<button class="btn {{ 'danger-o' if key in ('unpublish','request_changes','unschedule','archive') else '' }}" type="submit" name="action" value="{{ key }}">{{ label }}</button>{% endfor %}
+    </div>
+    {% if not a.id and not can_publish %}<p class="help">Autosave keeps your draft as you type. Submit it for review when it is ready.</p>{% endif %}
+  </section>
+  <fieldset class="panel" {{ 'disabled' if locked }}>
+    <h2>Details</h2>
+    <div class="fld"><label for="category_id">Category</label><select id="category_id" name="category_id"><option value="">— choose —</option>{% for c in categories %}{% if not c.parent_id %}<option value="{{ c.id }}" {{ 'selected' if a.category_id == c.id }}>{{ c.name }}</option>{% for k in c.children if k.active %}<option value="{{ k.id }}" {{ 'selected' if a.category_id == k.id }}>&nbsp;&nbsp;↳ {{ k.name }}</option>{% endfor %}{% endif %}{% endfor %}</select></div>
+    <div class="fld"><label for="article_type">Content type</label><select id="article_type" name="article_type">{% for v, l in types %}<option value="{{ v }}" {{ 'selected' if a.article_type == v }}>{{ l }}</option>{% endfor %}</select></div>
+    <div class="fld"><label for="sponsor_name">Sponsor <span class="muted">(required for Sponsored Content; shown in the disclosure)</span></label><input id="sponsor_name" name="sponsor_name" value="{{ a.sponsor_name or '' }}" maxlength="160"></div>
+    {% if can_edit_any %}<div class="fld"><label for="author_id">Author</label><select id="author_id" name="author_id"><option value="">— choose —</option>{% for au in authors %}<option value="{{ au.id }}" {{ 'selected' if a.author_id == au.id }}>{{ au.name }}</option>{% endfor %}</select></div>
+    <label class="check"><input type="checkbox" name="is_featured" {{ 'checked' if a.is_featured }}> Featured (homepage lead / top stories)</label>
+    <label class="check"><input type="checkbox" name="is_breaking" {{ 'checked' if a.is_breaking }}> Breaking news (homepage banner)</label>{% endif %}
+    <div class="fld"><label for="tags">Tags <span class="muted">(comma-separated)</span></label><input id="tags" name="tags" value="{{ tags_csv }}" maxlength="400"></div>
+  </fieldset>
+  <fieldset class="panel" {{ 'disabled' if locked }}>
+    <h2>Featured image</h2>
+    <div class="media-field" data-target="featured_media_id" data-mode="id">
+      <input type="hidden" id="featured_media_id" name="featured_media_id" value="{{ a.featured_media_id or '' }}">
+      <img class="media-preview" alt="" src="{{ a.featured_media.thumb_url if a.featured_media else '' }}" {% if not a.featured_media %}hidden{% endif %} width="240" height="160">
+      <div class="row-gap"><button type="button" class="btn small secondary" data-pick>Choose image…</button><button type="button" class="btn small secondary" data-clear>Clear</button></div></div>
+    <div class="fld"><label for="cover_caption">Caption <span class="muted">(defaults to the library caption)</span></label><input id="cover_caption" name="cover_caption" value="{{ a.cover_caption or '' }}" maxlength="300"></div>
+  </fieldset>
+  <fieldset class="panel" {{ 'disabled' if locked }}>
+    <h2>Image gallery</h2>
+    <input type="hidden" id="gallery_ids" name="gallery_ids" value="{{ gallery_ids }}">
+    <ul class="gallery-list" id="gallery-list">{% for m in gallery_media %}<li data-id="{{ m.id }}"><img src="{{ m.thumb_url }}" alt="" width="64" height="48"><span class="grow">{{ m.filename|truncate(22) }}</span><button type="button" data-up title="Move up">↑</button><button type="button" data-rm title="Remove">×</button></li>{% endfor %}</ul>
+    <button type="button" class="btn small secondary" id="gallery-add">Add images…</button>
+  </fieldset>
+  {% if a.id %}
+  <section class="panel" id="notes"><h2>Editorial notes</h2>
+    <ul class="notes-list">{% for n in notes %}<li class="note-{{ n.kind }}"><p class="small muted">{{ n.user_name }} · {{ n.created_at|localdatetime }}{% if n.kind != 'note' %} · {{ n.kind|replace('_',' ') }}{% endif %}</p><p>{{ n.body }}</p></li>{% else %}<li class="muted small">No notes yet.</li>{% endfor %}</ul>
+    <label class="sr" for="note-body">Add a note</label><textarea id="note-body" name="body" form="note-form" rows="2" maxlength="2000" placeholder="Internal note for writers and editors (never public)"></textarea>
+    <button class="btn small secondary" type="submit" form="note-form">Add note</button></section>
+  <section class="panel"><h2>Tools</h2><div class="row-gap">
+    <button class="btn small secondary" type="submit" form="dup-form">Duplicate as draft</button>
+    <a class="btn small secondary" href="{{ url_for('admin.article_revisions', id=a.id) }}">Revision history ({{ revision_count }})</a></div></section>
+  {% endif %}
+  {% if can_delete %}<section class="panel"><button class="btn danger" type="submit" form="delete-form">Delete article</button></section>{% endif %}
+</aside>
+</form>
+{% if a.id %}
+<form id="note-form" method="post" action="{{ url_for('admin.article_note', id=a.id) }}">{{ csrf() }}</form>
+<form id="dup-form" method="post" action="{{ url_for('admin.article_duplicate', id=a.id) }}">{{ csrf() }}</form>
+{% endif %}
+{% if can_delete %}<form id="delete-form" method="post" action="{{ url_for('admin.article_delete', id=a.id) }}" data-confirm="Delete this article permanently?">{{ csrf() }}</form>{% endif %}
+{% endblock %}

@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% from "public/_macros.html" import crumbs %}
+{% block title %}{{ ds.title }} | Data | {{ SITE_NAME }}{% endblock %}
+{% block description %}{{ ds.description or (ds.title ~ ' (' ~ ds.unit ~ '). Source: ' ~ ds.source_name) }}{% endblock %}
+{% block robots %}<meta name="robots" content="{{ 'noindex, nofollow' if ds.is_demo else 'index, follow, max-image-preview:large' }}">{% endblock %}
+{% block head %}
+<script type="application/ld+json">{{ {"@context":"https://schema.org","@type":"Dataset","name":ds.title,"description":ds.description or ds.title,"url":canonical,
+  "creator":{"@type":"Organization","name":ds.source_name or SITE_NAME},"measurementTechnique":ds.context[:200] if ds.context else "",
+  "variableMeasured":ds.title ~ " (" ~ ds.unit ~ ")","dateModified":ds.updated_at|isoz,"isBasedOn":ds.source_url or none}|tojson }}</script>
+{% endblock %}
+{% block content %}
+{{ crumbs(breadcrumbs) }}
+{% if ds.is_demo %}<div class="preview-bar demo-bar">Sample data: synthetic numbers for testing. Not real.</div>{% endif %}
+<article class="dataset">
+  <header class="page-head"><p class="eyebrow">{{ ds.topic }}</p><h1 class="page-title">{{ ds.title }}</h1>
+    {% if ds.description %}<p class="page-intro">{{ ds.description }}</p>{% endif %}</header>
+  {% if s.last %}
+  <div class="ds-summary">
+    <p class="ind-value big">{{ fmt_num(s.last.value, ds.decimals) }} <span class="ind-unit">{{ ds.unit }}</span></p>
+    <p class="ind-meta">As of <strong>{{ s.label }}</strong> · {{ ds.frequency|title }} series
+      {% if s.change is not none %} · <span class="ind-change {{ 'up' if s.change > 0 else 'down' if s.change < 0 else '' }}"><span aria-hidden="true">{{ '▲' if s.change > 0 else '▼' if s.change < 0 else '■' }}</span> {{ 'up' if s.change > 0 else 'down' if s.change < 0 else 'unchanged' }}{% if s.change != 0 %} {{ fmt_num(s.change|abs, ds.decimals) }}{% endif %} vs {{ period_label(s.prev.period, ds.frequency) }}</span>{% endif %}</p>
+    {% if s.stale %}<p class="content-note stale-note" role="note"><strong>Not recent.</strong> The latest observation is for {{ s.label }}, older than we would expect for a {{ ds.frequency }} series. A newer figure may exist at the source.</p>{% endif %}
+  </div>
+  <figure class="chart-wrap">{{ chart }}<figcaption>{{ ds.title }} ({{ ds.unit }}). Source: {{ ds.source_name }}.</figcaption></figure>
+  <section aria-labelledby="tbl-h"><div class="tbl-head"><h2 class="rail-h" id="tbl-h">Data table</h2><a class="btn small ghost" href="/data/{{ ds.slug }}.csv" download>Download CSV</a></div>
+    <div class="table-scroll"><table class="data-table"><caption class="sr">{{ ds.title }} by period</caption>
+      <thead><tr><th scope="col">Period</th><th scope="col" class="num">Value ({{ ds.unit }})</th><th scope="col">Note</th></tr></thead>
+      <tbody>{% for p in rows %}<tr><th scope="row">{{ period_label(p.period, ds.frequency) }}</th><td class="num">{{ fmt_num(p.value, ds.decimals) }}</td><td>{{ p.note }}</td></tr>{% endfor %}</tbody></table></div>
+    {% if total > rows|length and not show_all %}<p class="small"><a href="?all=1">Show all {{ total }} observations</a></p>{% endif %}</section>
+  {% else %}<p class="empty-state">No observations published for this series yet.</p>{% endif %}
+  <section class="ds-about" aria-labelledby="src-h"><h2 class="rail-h" id="src-h">Source &amp; notes</h2>
+    <dl class="meta-list"><dt>Source</dt><dd>{% if ds.source_url %}<a href="{{ ds.source_url }}" rel="noopener" target="_blank">{{ ds.source_name }}</a>{% else %}{{ ds.source_name }}{% endif %}</dd>
+      <dt>Unit</dt><dd>{{ ds.unit }}</dd><dt>Frequency</dt><dd>{{ ds.frequency|title }}</dd>
+      <dt>Page last updated</dt><dd>{{ ds.updated_at|localdate }}</dd></dl>
+    {% if ds.context %}<p>{{ ds.context }}</p>{% endif %}
+    <p class="muted small">Figures are reproduced from the source above and may be revised by it. {{ SITE_NAME }} does not estimate or forecast these values.</p></section>
+</article>
+{% endblock %}

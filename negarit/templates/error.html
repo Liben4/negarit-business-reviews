@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% set noview = True %}
+{% block title %}{{ title }} | {{ SITE_NAME }}{% endblock %}
+{% block robots %}<meta name="robots" content="noindex">{% endblock %}
+{% block banner_ad %}{% endblock %}
+{% block content %}
+<section class="status-page"><p class="eyebrow">Error {{ code }}</p><h1 class="page-title">{{ title }}</h1><p>{{ message }}</p>
+<p><a class="btn" href="/">Back to the homepage</a> <a class="btn ghost" href="/search">Search the site</a></p></section>
+{% endblock %}

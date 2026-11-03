@@ -1,0 +1,12 @@
+{% extends "admin/base.html" %}
+{% from "admin/_macros.html" import csrf %}
+{% block title %}Sign in{% endblock %}
+{% block content %}
+<form method="post" class="authcard">
+  <p class="logo dark">Negarit <em>Business Review</em></p><h1>Sign in</h1>{{ csrf() }}
+  <label>Email<input type="email" name="email" required autocomplete="username" autofocus></label>
+  <label>Password<input type="password" name="password" required autocomplete="current-password"></label>
+  <button class="btn" type="submit">Sign in</button>
+  <p class="help"><a href="{{ url_for('auth.forgot') }}">Forgot your password?</a></p>
+</form>
+{% endblock %}
